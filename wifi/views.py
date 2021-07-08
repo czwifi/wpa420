@@ -113,6 +113,7 @@ def wifi_list_json(request):
             "MAC": ap.bssid,
             "SSID": ap.ssid,
             "WPS": "null",
+            "_id": ap.pk,
             "author": ap.author.user.username,
             "password": ap.password,
             "position": [ap.latitude, ap.longitude],
