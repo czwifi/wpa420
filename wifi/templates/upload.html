@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+  Select import:
+  {{ form.file }}
+  {% csrf_token %}
+  <input type="submit" value="Upload" name="submit">
+</form>
+{% endblock %}

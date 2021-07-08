@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if filtered_ap_list %}
+ 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+   crossorigin=""></script>
+   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" crossorigin="">
+   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" crossorigin="">
+   <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" crossorigin=""></script>
+   <script src="https://unpkg.com/leaflet.featuregroup.subgroup@1.0.2/dist/leaflet.featuregroup.subgroup.js"></script>
+   <style>
+   	#mapid { height: 700px; }
+   </style>
+   <script>
+       L_PREFER_CANVAS = true; // experimental
+   </script>
+
+	<p>Total networks: {{ ap_list.count }} // {{ filtered_ap_list.count }} geolocated // <a href="#" onclick="toggleLocation(); return false;">Toggle location marker</a> // <a href="#" onclick="centerMapLocation(); return false;">Move map to my location</a></p>
+
+	<div id="mapid"></div>
+
+   <p>Leaderboards:</p>
+   <ul>
+   	{% for user in leaderboards %}
+   	<li>{{ user.user }}: {{ user.accesspoint__count }}</li>
+   	{% endfor %}
+   </ul>
+   <p>Providers:</p>
+   <ul>
+   	{% for provider in provider_list %}
+   	<li>{{ provider.provider }}: {{ provider.ap_count }}</li>
+   	{% endfor %}
+   </ul>
+
+    <script type="text/javascript">
+      //map creation
+      var mymap = L.map('mapid').setView([50.0755, 14.4378], 13);
+      var mapbox = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibjN0dHgiLCJhIjoiY2thdjV6ZHk0MDhtazMzcGNoYTl1cHUwYyJ9.zah7JmDF59WE2UQOcdq98w', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox/streets-v11',
+        tileSize: 512,
+        zoomOffset: -1,
+        accessToken: 'your.mapbox.access.token'
+      }).addTo(mymap);
+      //grouping access points
+      var cluster = L.markerClusterGroup({
+        maxClusterRadius: 250,
+        removeOutsideVisibleBounds: true,
+        spiderifyOnMaxZoom: false,
+        disableClusteringAtZoom: 16
+      });
+      //creating an array of access points
+      //TODO: could we speed this part up? (perhaps by caching query results?)
+      //TODO: would it be a good idea to offload the list itself onto a separate page and fetch that? (perhaps we could utilize browser cache then as well with a last updated parameter?)
+      var apGroups = {};
+      var accessPoints = [{% for ap in filtered_ap_list %}["{{ ap.ssid }}","{{ ap.bssid }}","{{ ap.password }}","{{ ap.added }}","{{ ap.latitude }}","{{ ap.longitude }}","{{ ap.author.marker_color }}","{{ ap.author.user.username }}"],{% endfor %}];
+      //looping through the array and placing markers on the map
+      accessPoints.forEach((entry) => {
+        var marker = L.circleMarker([entry[4], entry[5]]);
+        marker.bindPopup(`<b>SSID:</b> ${entry[0]}<br><b>BSSID:</b> ${entry[1]}<br><b>Password:</b> ${entry[2]}</b><br><b>Added on:</b> ${entry[3]}<br><b>Found by:</b> ${entry[7]}<br><a href="https://wigle.net/search?netid=${entry[1]}">More info...</a>`).openPopup();
+        marker.setStyle({color: `#${entry[6]}`});
+        if(typeof apGroups[entry[7]] === 'undefined')
+          apGroups[entry[7]] = [];
+        apGroups[entry[7]].push(marker);
+        //cluster.addLayer(marker)
+      });
+      //adding the access point cluster onto the map
+      var baseLayers = {
+        "Mapbox": mapbox,
+      };
+
+      var overlays = {};
+      for (const apGroup in apGroups) {
+        console.log(`${apGroup}: ${apGroups[apGroup]}`);
+        var mySubGroup = L.featureGroup.subGroup(cluster, apGroups[apGroup]);
+        overlays[apGroup] = mySubGroup;
+        mymap.addLayer(mySubGroup);
+      }
+
+      L.control.layers(baseLayers, overlays).addTo(mymap);
+
+      mymap.addLayer(cluster);
+      //geolocation (you are here marker)
+      var locationOptions = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      };
+      var locationMarker;
+      var coords;
+
+      function onInitialLocationSuccess(pos) {
+        coords = pos.coords
+        addLocationMarker(coords)
+        navigator.geolocation.watchPosition(onLocationUpdate, onLocationError, locationOptions);
+      }
+
+      function addLocationMarker(coords){
+        locationMarker = L.marker([coords.latitude, coords.longitude]).addTo(mymap);
+        locationMarker.bindPopup('<p>You are here!<br><a id="hideLocationMarkerLink" href="#" onclick="toggleLocation();return false;">Hide marker</a></p>');
+      }
+
+      function onLocationError(err){
+        console.warn(`ERROR(${err.code}): ${err.message}`);
+      }
+
+      function toggleLocation(){
+        if(mymap.hasLayer(locationMarker)){
+          mymap.removeLayer(locationMarker);
+        }else{
+          if(typeof coords === 'undefined')
+            navigator.geolocation.getCurrentPosition(onInitialLocationSuccess, onLocationError, locationOptions);
+          else
+            addLocationMarker(coords)
+        }
+      }
+
+      function onLocationUpdate(pos){
+        coords = pos.coords
+        if(mymap.hasLayer(locationMarker))
+          locationMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
+      }
+
+      function centerMapLocation(){
+        navigator.geolocation.getCurrentPosition(onCenterLocationSuccess, onLocationError, locationOptions);
+      }
+
+      function onCenterLocationSuccess(pos){
+        mymap.panTo([pos.coords.latitude, pos.coords.longitude]);
+        if(!mymap.hasLayer(locationMarker)){
+          onInitialLocationSuccess(pos);
+        }
+      }
+   </script>
+   
+{% else %}
+    <p>No networks are available.</p>
+{% endif %}
+
+{% endblock %}
