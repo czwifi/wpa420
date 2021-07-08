@@ -12,6 +12,7 @@ import json
 from requests.auth import HTTPBasicAuth
 import requests
 from datetime import datetime
+import hashlib
 
 def index(request):
     return redirect('map')
@@ -112,6 +113,7 @@ def wifi_list_json(request):
             "MAC": ap.bssid,
             "SSID": ap.ssid,
             "WPS": "null",
+            "_id": ap.pk,
             "author": ap.author.user.username,
             "password": ap.password,
             "position": [ap.latitude, ap.longitude],
@@ -120,6 +122,12 @@ def wifi_list_json(request):
         }
         networks.append(network)
     return JsonResponse(networks, safe=False)
+
+def api_dbhash(request):
+    # since this is only used for validation whether the db needs update
+    # we will return the hash of the latest timestamp for now
+    # as computing the hash of the entire db would be too costly
+    return HttpResponse(hashlib.md5(AccessPoint.objects.order_by('-added')[0].added.strftime('%Y-%m-%dT%H:%M:%S%z').encode('utf-8')).hexdigest())
 
 @login_required
 def refresh_location(request):
