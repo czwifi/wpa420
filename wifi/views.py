@@ -113,11 +113,14 @@ def wifi_list_json(request):
             "MAC": ap.bssid,
             "SSID": ap.ssid,
             "WPS": "null",
-            "_id": ap.pk,
+            "_id": str(ap.pk),
             "author": ap.author.user.username,
             "password": ap.password,
-            "position": [ap.latitude, ap.longitude],
-            "status": 0,
+            "position": [
+                "null" if ap.latitude is None else str(ap.latitude),
+                "null" if ap.longitude is None else str(ap.longitude),
+            ],
+            "status": "0",
             "timestamp": ap.added,
         }
         networks.append(network)
