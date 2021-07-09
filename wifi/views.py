@@ -4,9 +4,10 @@ from django.template import loader
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Count
+from django.utils.crypto import get_random_string
 
-from .models import AccessPoint, WifiUser
-from .forms import UploadFileForm, WigleForm
+from .models import AccessPoint, WifiUser, WifiUserInvite
+from .forms import UploadFileForm, WigleForm, RegisterForm
 
 import json
 from requests.auth import HTTPBasicAuth
@@ -165,3 +166,46 @@ def refresh_location(request):
             return HttpResponse("something went wrong")
     else:
         return render(request, 'refresh.html', context)
+
+@login_required
+def generate_invite(request):
+    invite = WifiUserInvite(
+        invite_code = get_random_string(length=32),
+        author = WifiUser.objects.get(user=request.user)
+    )
+    invite.save()
+    context = {'invite_code': invite.invite_code}
+    return render(request, 'generate_invite.html', context)
+
+def register(request):
+    register_form = RegisterForm(request.POST)
+    if request.method == 'POST':
+        if register_form.is_valid():
+            try:
+                invite = WifiUserInvite.objects.get(invite_code=register_form.cleaned_data['invite_code'], invitee=None)
+            except:
+                #invalid invite code
+                return render(request, "register_error.html")
+
+            if User.objects.filter(username=register_form.cleaned_data['username']).exists():
+                #username taken
+                return render(request, "register_error.html")
+
+            user = User.objects.create_user(register_form.cleaned_data['username'], register_form.cleaned_data['email'], register_form.cleaned_data['password'])
+            wifi_user = WifiUser(
+                user = user,
+                marker_color = register_form.cleaned_data['marker_color'].replace('#',''),
+            )
+            wifi_user.save()
+            invite.invitee = wifi_user
+            invite.save()
+
+            return redirect('login')
+
+        else:
+            return render(request, "register_error.html")
+    else:
+        context = {
+            'form': register_form
+        }
+        return render(request, "register.html", context)

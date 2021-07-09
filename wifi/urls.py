@@ -13,5 +13,7 @@ urlpatterns = [
     path('account/login', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('account/logout', auth_views.LogoutView.as_view(template_name='logout.html'), name='logout'),
     path('account/change_password', auth_views.PasswordChangeView.as_view(template_name='change_password.html', success_url='login'), name='change_password'),
+    path('account/generate_invite', views.generate_invite, name='generate_invite'),
+    path('account/register', views.register, name='register'),
     path('my_imports/refresh_location', views.refresh_location, name='refresh_location'),
 ]
