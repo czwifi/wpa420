@@ -3,7 +3,7 @@
 TODO: summary of what this is
 
 ## setup
-1. Install all python requirements (TODO: requirements list, for now you can see what it complains about when you do `python3 manage.py runserver`)
+1. Install all python requirements `pip3 install -r requirements.txt`
 2. Set up a MySQL/MariaDB database
 3. Edit .env file to match your settings
 4. `python3 manage.py makemigrations wifi && python3 manage.py migrate && python3 manage.py collectstatic --no-input`
