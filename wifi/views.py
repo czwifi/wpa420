@@ -7,7 +7,7 @@ from django.db.models import Count
 from django.utils.crypto import get_random_string
 
 from .models import AccessPoint, WifiUser, WifiUserInvite
-from .forms import UploadFileForm, WigleForm, RegisterForm
+from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm
 
 import json
 from requests.auth import HTTPBasicAuth
@@ -209,3 +209,35 @@ def register(request):
             'form': register_form
         }
         return render(request, "register.html", context)
+
+@login_required
+def settings(request):
+    wifi_user = WifiUser.objects.get(user=request.user)
+    initial_dict = {
+        'username': request.user.username,
+        'email': request.user.email,
+        'marker_color': f"#{wifi_user.marker_color}",
+
+    }
+    settings_form = SettingsForm(request.POST or None, initial = initial_dict)
+    error_message = None
+    if request.method == 'POST':
+        if settings_form.is_valid():
+            user = request.user
+            if not user.username.lower() == settings_form.cleaned_data['username'].lower() and User.objects.filter(username__iexact=settings_form.cleaned_data['username']).exists():
+                error_message = f"Unable to change username: {settings_form.cleaned_data['username']} is already taken."
+            else:
+                user.username = settings_form.cleaned_data['username']
+            user.email = settings_form.cleaned_data['email']
+            user.save()
+            wifi_user.marker_color = settings_form.cleaned_data['marker_color'].replace('#','')
+            wifi_user.save()
+        else:
+            error_message = "Invalid form input detected."
+
+    context = {
+        'form': settings_form,
+        'update_message': request.method == 'POST',
+        'error_message': error_message
+    }
+    return render(request, "settings.html", context)

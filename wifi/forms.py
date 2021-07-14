@@ -13,3 +13,8 @@ class RegisterForm(forms.Form):
 	password = forms.CharField(label='Password', widget=forms.PasswordInput)
 	invite_code = forms.CharField(label='Invite Code', max_length=32)
 	marker_color = forms.CharField(label='Marker Color', widget=forms.TextInput(attrs={'type': 'color'}))
+
+class SettingsForm(forms.Form):
+	username = forms.CharField(label='Username', max_length=150)
+	email = forms.EmailField(label='Email (optional)', required=False)
+	marker_color = forms.CharField(label='Marker Color', widget=forms.TextInput(attrs={'type': 'color'}))

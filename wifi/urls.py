@@ -15,5 +15,6 @@ urlpatterns = [
     path('account/change_password', auth_views.PasswordChangeView.as_view(template_name='change_password.html', success_url='login'), name='change_password'),
     path('account/generate_invite', views.generate_invite, name='generate_invite'),
     path('account/register', views.register, name='register'),
+    path('account/settings', views.settings, name='settings'),
     path('my_imports/refresh_location', views.refresh_location, name='refresh_location'),
 ]
