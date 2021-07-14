@@ -89,7 +89,7 @@ def upload_form_json(request):
                     bssid = network['MAC'].upper(),
                     ssid = network["SSID"],
                     wps = network["WPS"],
-                    author = User.objects.get(username=network["author"]),
+                    author = WifiUser.objects.get(user__username=network["author"]),
                     password = network["password"],
                     latitude = None if network["position"][0] == "null" else network["position"][0],
                     longitude = None if network["position"][1] == "null" else network["position"][1],
