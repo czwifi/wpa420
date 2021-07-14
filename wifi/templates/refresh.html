@@ -2,8 +2,9 @@
 {% block content %}
 <form method="post">
   Enter Wigle credentials:
-  {{ form.wigle_name }}
-  {{ form.wigle_key }}
+  <table>
+  {{ form }}
+</table>
   {% csrf_token %}
   <input type="submit" value="Submit" name="submit">
 </form>

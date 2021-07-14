@@ -4,9 +4,10 @@ from django.template import loader
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Count
+from django.utils.crypto import get_random_string
 
-from .models import AccessPoint, WifiUser
-from .forms import UploadFileForm, WigleForm
+from .models import AccessPoint, WifiUser, WifiUserInvite
+from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm
 
 import json
 from requests.auth import HTTPBasicAuth
@@ -113,11 +114,14 @@ def wifi_list_json(request):
             "MAC": ap.bssid,
             "SSID": ap.ssid,
             "WPS": "null",
-            "_id": ap.pk,
+            "_id": str(ap.pk),
             "author": ap.author.user.username,
             "password": ap.password,
-            "position": [ap.latitude, ap.longitude],
-            "status": 0,
+            "position": [
+                "null" if ap.latitude is None else str(ap.latitude),
+                "null" if ap.longitude is None else str(ap.longitude),
+            ],
+            "status": "0",
             "timestamp": ap.added,
         }
         networks.append(network)
@@ -162,3 +166,78 @@ def refresh_location(request):
             return HttpResponse("something went wrong")
     else:
         return render(request, 'refresh.html', context)
+
+@login_required
+def generate_invite(request):
+    invite = WifiUserInvite(
+        invite_code = get_random_string(length=32),
+        author = WifiUser.objects.get(user=request.user)
+    )
+    invite.save()
+    context = {'invite_code': invite.invite_code}
+    return render(request, 'generate_invite.html', context)
+
+def register(request):
+    register_form = RegisterForm(request.POST)
+    if request.method == 'POST':
+        if register_form.is_valid():
+            try:
+                invite = WifiUserInvite.objects.get(invite_code=register_form.cleaned_data['invite_code'], invitee=None)
+            except:
+                #invalid invite code
+                return render(request, "register_error.html")
+
+            if User.objects.filter(username=register_form.cleaned_data['username']).exists():
+                #username taken
+                return render(request, "register_error.html")
+
+            user = User.objects.create_user(register_form.cleaned_data['username'], register_form.cleaned_data['email'], register_form.cleaned_data['password'])
+            wifi_user = WifiUser(
+                user = user,
+                marker_color = register_form.cleaned_data['marker_color'].replace('#',''),
+            )
+            wifi_user.save()
+            invite.invitee = wifi_user
+            invite.save()
+
+            return redirect('login')
+
+        else:
+            return render(request, "register_error.html")
+    else:
+        context = {
+            'form': register_form
+        }
+        return render(request, "register.html", context)
+
+@login_required
+def settings(request):
+    wifi_user = WifiUser.objects.get(user=request.user)
+    initial_dict = {
+        'username': request.user.username,
+        'email': request.user.email,
+        'marker_color': f"#{wifi_user.marker_color}",
+
+    }
+    settings_form = SettingsForm(request.POST or None, initial = initial_dict)
+    error_message = None
+    if request.method == 'POST':
+        if settings_form.is_valid():
+            user = request.user
+            if not user.username.lower() == settings_form.cleaned_data['username'].lower() and User.objects.filter(username__iexact=settings_form.cleaned_data['username']).exists():
+                error_message = f"Unable to change username: {settings_form.cleaned_data['username']} is already taken."
+            else:
+                user.username = settings_form.cleaned_data['username']
+            user.email = settings_form.cleaned_data['email']
+            user.save()
+            wifi_user.marker_color = settings_form.cleaned_data['marker_color'].replace('#','')
+            wifi_user.save()
+        else:
+            error_message = "Invalid form input detected."
+
+    context = {
+        'form': settings_form,
+        'update_message': request.method == 'POST',
+        'error_message': error_message
+    }
+    return render(request, "settings.html", context)

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<form method="post">
+  <table>
+  <tr>
+  	<td>{{ form.username.label_tag }}</td>
+  	<td>{{ form.username }}</td>
+  </tr>
+  <tr>
+  	<td>{{ form.email.label_tag }}</td>
+  	<td>{{ form.email }}</td>
+  </tr>
+  <tr>
+  	<td>{{ form.password.label_tag }}</td>
+  	<td>{{ form.password }}</td>
+  </tr>
+  <tr>
+  	<td>{{ form.invite_code.label_tag }}</td>
+  	<td>{{ form.invite_code }}</td>
+  </tr>
+  <tr>
+  	<td>{{ form.marker_color.label_tag }}</td>
+  	<td>{{ form.marker_color }}</td>
+  </tr>
+</table>
+  {% csrf_token %}
+  <input type="submit" value="Register" name="submit">
+</form>
+{% endblock %}

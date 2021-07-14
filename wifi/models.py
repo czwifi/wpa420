@@ -12,6 +12,23 @@ class WifiUser(models.Model):
         db_index=True,
     )
     marker_color = models.CharField(default='ffffff', max_length=6)
+
+class WifiUserInvite(models.Model):
+	invite_code = models.CharField(max_length=32, db_index=True, unique=True)
+	author = models.ForeignKey(
+		WifiUser,
+		on_delete=models.CASCADE,
+		db_index=True,
+		related_name='invites',
+	)
+	invitee = models.ForeignKey(
+		WifiUser,
+		null=True, blank=True,
+		on_delete=models.CASCADE,
+		db_index=True,
+		related_name='invited_by',
+	)
+	generated = models.DateTimeField('date generated', default=datetime.now)
     
 class AccessPoint(models.Model):
 

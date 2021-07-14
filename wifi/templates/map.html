@@ -19,14 +19,14 @@
        L_PREFER_CANVAS = true; // experimental
    </script>
 
-	<p>Total networks: {{ ap_list.count }} // {{ filtered_ap_list.count }} geolocated // <a href="#" onclick="toggleLocation(); return false;">Toggle location marker</a> // <a href="#" onclick="centerMapLocation(); return false;">Move map to my location</a></p>
+	<p>Total networks: {{ ap_list.count }} // {{ filtered_ap_list.count }} geolocated ({% widthratio filtered_ap_list.count ap_list.count 100 %}%) // <a href="#" onclick="toggleLocation(); return false;">Toggle location marker</a> // <a href="#" onclick="centerMapLocation(); return false;">Move map to my location</a></p>
 
 	<div id="mapid"></div>
 
    <p>Leaderboards:</p>
    <ul>
    	{% for user in leaderboards %}
-   	<li>{{ user.user }}: {{ user.accesspoint__count }}</li>
+   	<li>{{ user.user }}: {{ user.accesspoint__count }} ({% widthratio user.accesspoint__count ap_list.count 100 %}%)</li>
    	{% endfor %}
    </ul>
    <p>Providers:</p>
@@ -39,14 +39,28 @@
     <script type="text/javascript">
       //map creation
       var mymap = L.map('mapid').setView([50.0755, 14.4378], 13);
-      var mapbox = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibjN0dHgiLCJhIjoiY2thdjV6ZHk0MDhtazMzcGNoYTl1cHUwYyJ9.zah7JmDF59WE2UQOcdq98w', {
+      //map types
+      var streets = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibjN0dHgiLCJhIjoiY2thdjV6ZHk0MDhtazMzcGNoYTl1cHUwYyJ9.zah7JmDF59WE2UQOcdq98w', {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
         maxZoom: 18,
         id: 'mapbox/streets-v11',
         tileSize: 512,
         zoomOffset: -1,
-        accessToken: 'your.mapbox.access.token'
       }).addTo(mymap);
+      var satellite = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibjN0dHgiLCJhIjoiY2thdjV6ZHk0MDhtazMzcGNoYTl1cHUwYyJ9.zah7JmDF59WE2UQOcdq98w', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox/satellite-streets-v11',
+        tileSize: 512,
+        zoomOffset: -1,
+      })
+      var dark = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibjN0dHgiLCJhIjoiY2thdjV6ZHk0MDhtazMzcGNoYTl1cHUwYyJ9.zah7JmDF59WE2UQOcdq98w', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox/dark-v10',
+        tileSize: 512,
+        zoomOffset: -1,
+      })
       //grouping access points
       var cluster = L.markerClusterGroup({
         maxClusterRadius: 250,
@@ -71,12 +85,13 @@
       });
       //adding the access point cluster onto the map
       var baseLayers = {
-        "Mapbox": mapbox,
+        "Streets": streets,
+        "Satellite": satellite,
+        "Dark": dark,
       };
 
       var overlays = {};
       for (const apGroup in apGroups) {
-        console.log(`${apGroup}: ${apGroups[apGroup]}`);
         var mySubGroup = L.featureGroup.subGroup(cluster, apGroups[apGroup]);
         overlays[apGroup] = mySubGroup;
         mymap.addLayer(mySubGroup);

@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{% url 'settings' %}"> &lt;&lt; Settings</a></p>
+<p>Generated single-use invite code: <span style="font-family: monospace;">{{ invite_code }}</span></p>
+{% endblock %}
