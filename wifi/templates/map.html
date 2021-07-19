@@ -104,11 +104,9 @@
   //TODO: could we speed this part up? (perhaps by caching query results?)
   //TODO: would it be a good idea to offload the list itself onto a separate page and fetch that? (perhaps we could utilize browser cache then as well with a last updated parameter?)
   var apGroups = {};
-  var accessPoints = [{ % for ap in filtered_ap_list %} ["{{ ap.ssid }}", "{{ ap.bssid }}", "{{ ap.password }}", "{{ ap.added }}", "{{ ap.latitude }}",
+  var accessPoints = [{% for ap in filtered_ap_list %} ["{{ ap.ssid }}", "{{ ap.bssid }}", "{{ ap.password }}", "{{ ap.added }}", "{{ ap.latitude }}",
     "{{ ap.longitude }}", "{{ ap.author.marker_color }}", "{{ ap.author.user.username }}"
-  ], {
-    % endfor %
-  }];
+  ], {% endfor %}];
   //looping through the array and placing markers on the map
   accessPoints.forEach((entry) => {
     var marker = L.circleMarker([entry[4], entry[5]]);
@@ -196,7 +194,7 @@
 </script>
 
 {% else %}
-<p>No networks are available.</p>
+    <p>No networks are available.</p>
 {% endif %}
 
 {% endblock %}
