@@ -21,20 +21,26 @@
 
 	<p>Total networks: {{ ap_list.count }} // {{ filtered_ap_list.count }} geolocated ({% widthratio filtered_ap_list.count ap_list.count 100 %}%) // <a href="#" onclick="toggleLocation(); return false;">Toggle location marker</a> // <a href="#" onclick="centerMapLocation(); return false;">Move map to my location</a></p>
 
-	<div class="map" id="mapid"></div>
+	<div class="container" id="mapid"></div>
 
+<div class="list">
+  <div class="container">
    <p>Leaderboards:</p>
    <ul>
    	{% for user in leaderboards %}
    	<li>{{ user.user }}: {{ user.accesspoint__count }} ({% widthratio user.accesspoint__count ap_list.count 100 %}%)</li>
    	{% endfor %}
    </ul>
+ </div>
+ <div class="container">
    <p>Providers:</p>
    <ul>
    	{% for provider in provider_list %}
    	<li>{{ provider.provider }}: {{ provider.ap_count }}</li>
    	{% endfor %}
    </ul>
+   </div>
+  </div>
 
     <script type="text/javascript">
       //map creation

@@ -17,11 +17,14 @@
     </head>
 
     <body>
-    	{% if user.is_authenticated %}
-        	<p>wpa420 / <a href="{% url 'map' %}">Map</a> / <a href="{% url 'upload' %}">Upload</a> / <a href="{% url 'settings' %}">Settings</a> / <a href="{% url 'logout' %}">Logout</a></p>
-        {% else %}
-        	<p>wpa420 / <a href="{% url 'register' %}">Register</a> / <a href="{% url 'login' %}">Login</a></p>
-        {% endif %}
-        {% block content %}{% endblock content %}
+        <div class="container">
+        	{% if user.is_authenticated %}
+            	<p>wpa420 / <a href="{% url 'map' %}">Map</a> / <a href="{% url 'upload' %}">Upload</a> / <a href="{% url 'settings' %}">Settings</a> / <a href="{% url 'logout' %}">Logout</a></p>
+            {% else %}
+            	<p>wpa420 / <a href="{% url 'register' %}">Register</a> / <a href="{% url 'login' %}">Login</a></p>
+            {% endif %}
+            {% block content %}
+            {% endblock content %}
+            </div>
     </body>
 </html>
