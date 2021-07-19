@@ -1,6 +1,7 @@
 body {
   background: #e2e1e0;
   font-family: 'IBM Plex Sans', sans-serif;
+  display: flex;
 }
 
 a:hover {
@@ -13,6 +14,18 @@ a:visited {
 
 a:link {
   color: black;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.list {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .box {
