@@ -39,11 +39,13 @@ def map(request):
 
 @login_required
 def upload_form(request):
-    form = UploadFileForm(request.POST, request.FILES)
+    wifi_author = WifiUser.objects.get(user=request.user)
+    form = UploadFileForm(request.POST or None, request.FILES or None, initial={'import_as': wifi_author})
     if request.method == 'POST':
         if form.is_valid():
+            if request.user.is_superuser and form.cleaned_data['import_as'] is not None:
+                wifi_author = form.cleaned_data['import_as']
             #TODO: create wifiuser if does not exist
-            wifi_author = WifiUser.objects.get(user=request.user)
             #TODO: handle semicolons in ssids?
             lines = request.FILES['file'].read().decode('utf-8').splitlines()
             print(lines)
