@@ -1,7 +1,10 @@
 from django import forms
+from .models import WifiUser
 
 class UploadFileForm(forms.Form):
-    file = forms.FileField(label='Select a file')
+	file = forms.FileField(label='Select a file')
+	import_as = forms.ModelChoiceField(queryset=WifiUser.objects.all().select_related('user').order_by('user__username'))
+
 
 class WigleForm(forms.Form):
 	wigle_name = forms.CharField(label='Wigle API Name', max_length=100)
