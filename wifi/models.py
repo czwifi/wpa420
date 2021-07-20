@@ -12,6 +12,8 @@ class WifiUser(models.Model):
         db_index=True,
     )
     marker_color = models.CharField(default='ffffff', max_length=6)
+    def __str__(self):
+        return self.user.username
 
 class WifiUserInvite(models.Model):
 	invite_code = models.CharField(max_length=32, db_index=True, unique=True)
@@ -29,6 +31,8 @@ class WifiUserInvite(models.Model):
 		related_name='invited_by',
 	)
 	generated = models.DateTimeField('date generated', default=datetime.now)
+	def __str__(self):
+		return f"{self.author} : {self.invitee}"
     
 class AccessPoint(models.Model):
 
@@ -49,7 +53,6 @@ class AccessPoint(models.Model):
 	author = models.ForeignKey(
 		WifiUser,
 		on_delete=models.CASCADE,
-		null=True, blank=True,
 		db_index=True,
 	)
 	latitude = models.DecimalField(max_digits=11, decimal_places=8, null=True, blank=True, db_index=True)
@@ -67,3 +70,5 @@ class AccessPoint(models.Model):
 		choices=Frequency.choices, 
 		default=Frequency.FREQ_2_4G,
 	)
+	def __str__(self):
+		return f"{self.bssid} - {self.ssid}"
