@@ -39,21 +39,22 @@ def map(request):
 
 @login_required
 def upload_form(request):
-    form = UploadFileForm(request.POST, request.FILES)
+    wifi_author = WifiUser.objects.get(user=request.user)
+    form = UploadFileForm(request.POST or None, request.FILES or None, initial={'import_as': wifi_author})
     if request.method == 'POST':
         if form.is_valid():
+            if request.user.is_superuser and form.cleaned_data['import_as'] is not None:
+                wifi_author = form.cleaned_data['import_as']
             #TODO: create wifiuser if does not exist
-            wifi_author = WifiUser.objects.get(user=request.user)
             #TODO: handle semicolons in ssids?
             lines = request.FILES['file'].read().decode('utf-8').splitlines()
             print(lines)
-            total = skipped = 0
+            access_points = []
             for line in lines:
-                total += 1
                 networkInfo = line.split(";")
-                if AccessPoint.objects.filter(bssid=networkInfo[2].upper()).exists():
-                    skipped += 1
-                    continue
+                #if AccessPoint.objects.filter(bssid=networkInfo[2].upper()).exists():
+                #    skipped += 1
+                #    continue
                 access_point = AccessPoint(
                     latitude = None if networkInfo[0] == "null" else networkInfo[0],
                     longitude = None if networkInfo[1] == "null" else networkInfo[1],
@@ -63,8 +64,13 @@ def upload_form(request):
                     author = wifi_author,
                     wps_enabled = False,
                 )
-                access_point.save()
-            context = {'total': total, 'skipped': skipped, 'new': total - skipped}
+                access_points.append(access_point)
+                #access_point.save()
+            total = AccessPoint.objects.count()
+            to_add = len(access_points)
+            AccessPoint.objects.bulk_create(access_points, ignore_conflicts=True)
+            new = AccessPoint.objects.count() - total
+            context = {'total': to_add, 'skipped': to_add - new, 'new': new}
             return render(request, 'upload_complete.html', context)
         else:
             field_errors = [ (field.label, field.errors) for field in form] 
@@ -82,24 +88,31 @@ def upload_form_json(request):
         if form.is_valid():
             lines = request.FILES['file'].read().decode('utf-8')
             json_file = json.loads(lines)
+            access_points = []
+            wifi_users = {}
             for network in json_file:
-                if AccessPoint.objects.filter(bssid=network['MAC'].upper()).exists() or not User.objects.filter(username=network["author"]).exists():
+                if not network["author"] in wifi_users:
+                    if not User.objects.filter(username=network["author"]).exists():
+                        wifi_users[network["author"]] = None
+                        continue
+                    wifi_users[network["author"]] = WifiUser.objects.get(user__username=network["author"])
+                if network["author"] is None:
                     continue
                 access_point = AccessPoint(
                     bssid = network['MAC'].upper(),
                     ssid = network["SSID"],
                     wps = network["WPS"],
-                    author = WifiUser.objects.get(user__username=network["author"]),
+                    author = wifi_users[network["author"]],
                     password = network["password"],
-                    latitude = None if network["position"][0] == "null" else network["position"][0],
-                    longitude = None if network["position"][1] == "null" else network["position"][1],
+                    latitude = None if network["position"][0] == "null" or network["position"][0] == "" else network["position"][0],
+                    longitude = None if network["position"][1] == "null" or network["position"][0] == "" else network["position"][1],
                     wps_enabled = False,
                 )
                 access_point.added = network["timestamp"]
-                print(network["timestamp"])
-                print(access_point.added)
-                access_point.save()
-            return HttpResponse("yes")
+                access_points.append(access_point)
+            AccessPoint.objects.bulk_create(access_points, ignore_conflicts=True)
+            context = {'total': len(access_points), 'skipped': 'didnt calculate', 'new': 'didnt calculate'}
+            return render(request, 'upload_complete.html', context)
         else:
             field_errors = [ (field.label, field.errors) for field in form] 
             print(field_errors)
