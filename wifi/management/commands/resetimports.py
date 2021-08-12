@@ -11,4 +11,7 @@ class Command(BaseCommand):
             access_point.wifi_import = None
             access_point.save()
             print(f"Updated {access_point}")
+        wifi_imports = WifiImport.objects.all()
+        for wifi_import in wifi_imports:
+        	wifi_import.delete()
         print("Done")
