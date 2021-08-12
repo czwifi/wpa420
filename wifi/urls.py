@@ -16,5 +16,8 @@ urlpatterns = [
     path('account/generate_invite', views.generate_invite, name='generate_invite'),
     path('account/register', views.register, name='register'),
     path('account/settings', views.settings, name='settings'),
+    path('account/api_keys', views.manage_api_keys, name='api_keys'),
+    path('account/api_keys/new', views.create_api_key, name='create_api_key'),
+    path('account/api_keys/delete/<key_id>',views.delete_api_key,name='delete_api_key'),
     path('my_imports/refresh_location', views.refresh_location, name='refresh_location'),
 ]

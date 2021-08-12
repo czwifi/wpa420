@@ -21,3 +21,6 @@ class SettingsForm(forms.Form):
 	username = forms.CharField(label='Username', max_length=150)
 	email = forms.EmailField(label='Email (optional)', required=False)
 	marker_color = forms.CharField(label='Marker Color', widget=forms.TextInput(attrs={'type': 'color'}))
+
+class CreateWifiUserApiKeyForm(forms.Form):
+	description = forms.CharField(label='Description')

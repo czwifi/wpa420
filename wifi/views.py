@@ -6,8 +6,9 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 from django.utils.crypto import get_random_string
 
-from .models import AccessPoint, WifiUser, WifiUserInvite
-from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm
+from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey
+from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, CreateWifiUserApiKeyForm
+from .decorators import api_key_required
 
 import json
 from requests.auth import HTTPBasicAuth
@@ -119,27 +120,29 @@ def upload_form_json(request):
     else:
         return render(request, 'upload.html', context)
 
+@api_key_required
 def wifi_list_json(request):
-    networks = []
-    ap_list = AccessPoint.objects.all().prefetch_related('author__user')
-    for ap in ap_list:
-        network = {
-            "MAC": ap.bssid,
-            "SSID": ap.ssid,
-            "WPS": "null",
-            "_id": str(ap.pk),
-            "author": ap.author.user.username,
-            "password": ap.password,
-            "position": [
-                "null" if ap.latitude is None else str(ap.latitude),
-                "null" if ap.longitude is None else str(ap.longitude),
-            ],
-            "status": "0",
-            "timestamp": ap.added,
-        }
-        networks.append(network)
-    return JsonResponse(networks, safe=False)
+        networks = []
+        ap_list = AccessPoint.objects.all().prefetch_related('author__user')
+        for ap in ap_list:
+            network = {
+                "MAC": ap.bssid,
+                "SSID": ap.ssid,
+                "WPS": "null",
+                "_id": str(ap.pk),
+                "author": ap.author.user.username,
+                "password": ap.password,
+                "position": [
+                    "null" if ap.latitude is None else str(ap.latitude),
+                    "null" if ap.longitude is None else str(ap.longitude),
+                ],
+                "status": "0",
+                "timestamp": ap.added,
+            }
+            networks.append(network)
+        return JsonResponse(networks, safe=False)
 
+@api_key_required
 def api_dbhash(request):
     # since this is only used for validation whether the db needs update
     # we will return the hash of the latest timestamp for now
@@ -254,3 +257,48 @@ def settings(request):
         'error_message': error_message
     }
     return render(request, "settings.html", context)
+
+@login_required
+def manage_api_keys(request):
+    wifi_user = WifiUser.objects.get(user=request.user)
+    key_list = WifiUserApiKey.objects.filter(wifi_user=wifi_user).order_by('-used')
+    context = {
+        'key_list': key_list
+    }
+    return render(request, "settings_api_keys.html", context)
+
+@login_required
+def create_api_key(request):
+    wifi_user = WifiUser.objects.get(user=request.user)
+    form = CreateWifiUserApiKeyForm(request.POST)
+    if request.method == 'POST':
+        if form.is_valid():
+            api_key = WifiUserApiKey(
+                key = get_random_string(length=32),
+                wifi_user = wifi_user,
+                description = form.cleaned_data['description']
+            )
+            api_key.save()
+            context = {
+                'api_key': api_key.key
+            }
+            return render(request, "create_api_key_success.html", context)
+        else:
+            error_message = "Invalid form input detected." #TODO: error handling
+
+    context = {
+        'form': form
+    }
+    return render(request, "create_api_key.html", context)
+
+@login_required
+def delete_api_key(request, key_id=None):
+    wifi_user = WifiUser.objects.get(user=request.user)
+    try:
+        api_key = WifiUserApiKey.objects.get(pk=key_id)
+        if not api_key.wifi_user == wifi_user:
+            return HttpResponse("the key exists but it belongs to someone else")
+        api_key.delete()
+        return redirect('api_keys')
+    except:
+        return HttpResponse("TODO: better error, key probably doesn't exist")
