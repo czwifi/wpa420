@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 from django.utils.crypto import get_random_string
 
-from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey
+from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey, WifiImport
 from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, CreateWifiUserApiKeyForm
 from .decorators import api_key_required
 
@@ -49,7 +49,9 @@ def upload_form(request):
             #TODO: create wifiuser if does not exist
             #TODO: handle semicolons in ssids?
             lines = request.FILES['file'].read().decode('utf-8').splitlines()
-            print(lines)
+            #print(lines)
+            wifi_import = WifiImport(author=wifi_author)
+            wifi_import.save()
             access_points = []
             for line in lines:
                 networkInfo = line.split(";")
@@ -64,6 +66,7 @@ def upload_form(request):
                     password = networkInfo[4],
                     author = wifi_author,
                     wps_enabled = False,
+                    wifi_import = wifi_import
                 )
                 access_points.append(access_point)
                 #access_point.save()
@@ -112,7 +115,7 @@ def upload_form_json(request):
                 access_point.added = network["timestamp"]
                 access_points.append(access_point)
             AccessPoint.objects.bulk_create(access_points, ignore_conflicts=True)
-            context = {'total': len(access_points), 'skipped': 'didnt calculate', 'new': 'didnt calculate'}
+            context = {'total': len(access_points), 'skipped': 'didnt calculate', 'new': 'Please also run the fixtimestamps and createimports commands in CLI'}
             return render(request, 'upload_complete.html', context)
         else:
             field_errors = [ (field.label, field.errors) for field in form] 
