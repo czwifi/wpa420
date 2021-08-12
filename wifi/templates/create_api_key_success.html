@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{% url 'settings' %}"> &lt;&lt; Settings</a> <a href="{% url 'api_keys' %}"> &lt;&lt; Manage API keys</a></p>
+<p>Generated api key: <span style="font-family: monospace;">{{ api_key }}</span></p>
+{% endblock %}

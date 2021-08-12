@@ -15,6 +15,19 @@ class WifiUser(models.Model):
     def __str__(self):
         return self.user.username
 
+class WifiUserApiKey(models.Model):
+	key = models.CharField(max_length=32, db_index=True, unique=True)
+	wifi_user = models.ForeignKey(
+		WifiUser,
+		on_delete=models.CASCADE,
+		db_index=True,
+	)
+	description = models.CharField(max_length=255)
+	created = models.DateTimeField('date created', default=datetime.now)
+	used = models.DateTimeField('date used', default=datetime.now)
+	def __str__(self):
+		return f"{self.wifi_user} : {self.description}"
+
 class WifiUserInvite(models.Model):
 	invite_code = models.CharField(max_length=32, db_index=True, unique=True)
 	author = models.ForeignKey(

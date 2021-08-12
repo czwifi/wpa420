@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="{% url 'settings' %}"> &lt;&lt; Settings</a> <a href="{% url 'api_keys' %}"> &lt;&lt; Manage API keys</a></p>
+<form method="post">
+  Add api key:
+  <table>
+    <tr>
+  	  <td>{{ form.description.label_tag }}</td>
+  	  <td>{{ form.description }}</td>
+    </tr>
+  </table>
+  {% csrf_token %}
+  <input type="submit" value="Submit" name="submit">
+</form>
+{% endblock %}
