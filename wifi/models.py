@@ -46,6 +46,16 @@ class WifiUserInvite(models.Model):
 	generated = models.DateTimeField('date generated', default=datetime.now)
 	def __str__(self):
 		return f"{self.author} : {self.invitee}"
+
+class WifiImport(models.Model):
+	author = models.ForeignKey(
+		WifiUser,
+		on_delete=models.CASCADE,
+		db_index=True,
+	)
+	added = models.DateTimeField('date added', default=datetime.now)
+	def __str__(self):
+		return f"{self.author} - {self.added}"
     
 class AccessPoint(models.Model):
 
@@ -67,11 +77,11 @@ class AccessPoint(models.Model):
 		WifiUser,
 		on_delete=models.CASCADE,
 		db_index=True,
-	)
+	) #DEPRECATED (should be taken from import)
 	latitude = models.DecimalField(max_digits=11, decimal_places=8, null=True, blank=True, db_index=True)
 	longitude = models.DecimalField(max_digits=11, decimal_places=8, null=True, blank=True, db_index=True)
 	password = models.CharField(max_length=63)
-	added = models.DateTimeField('date added', default=datetime.now)
+	added = models.DateTimeField('date added', default=datetime.now) #DEPRECATED (should be taken from import)
 	location_refreshed = models.DateTimeField('date location refreshed', blank=True, null=True, default=datetime.now)
 	encryption = models.CharField(
 		max_length=4, 
@@ -82,6 +92,12 @@ class AccessPoint(models.Model):
 		max_length=4, 
 		choices=Frequency.choices, 
 		default=Frequency.FREQ_2_4G,
+	)
+	wifi_import = models.ForeignKey(
+		WifiImport,
+		on_delete=models.CASCADE,
+		db_index=True,
+		null=True, blank=True,
 	)
 	def __str__(self):
 		return f"{self.bssid} - {self.ssid}"
