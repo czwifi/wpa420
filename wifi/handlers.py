@@ -1,3 +1,5 @@
+from django.shortcuts import render
+
 from .models import AccessPoint, WifiImport
 
 class ImportResults:
@@ -50,3 +52,6 @@ def generate_v1_ap_array(ap_list):
         }
         networks.append(network)
     return networks
+
+def render_generic_error(request, error_text):
+	return render(request, "account/error.html", {'error': error_text})
