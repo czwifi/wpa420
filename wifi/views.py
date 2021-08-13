@@ -99,9 +99,9 @@ def upload_form_json(request):
 
 @api_key_required
 def wifi_list_json(request):
-        ap_list = AccessPoint.objects.all().prefetch_related('author__user')
-        networks = generate_v1_ap_array(ap_list)
-        return JsonResponse(networks, safe=False)
+    ap_list = AccessPoint.objects.all().prefetch_related('author__user')
+    networks = generate_v1_ap_array(ap_list)
+    return JsonResponse(networks, safe=False)
 
 @api_key_required
 def api_dbhash(request):
