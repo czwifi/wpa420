@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+<p><a href="{% url 'settings' %}"> &lt;&lt; Settings</a></p>
+
 <a href="{% url 'create_api_key' %}">New key</a>
 <table border="1em">
   <tr>
