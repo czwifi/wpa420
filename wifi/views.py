@@ -30,14 +30,13 @@ def map(request):
     for provider in providers:
         provider_list.append({'provider':provider, 'ap_count': AccessPoint.objects.filter(ssid__startswith=provider).count()})
     provider_list.sort(key=lambda x: x['ap_count'], reverse=True)
-    template = loader.get_template('map.html')
     context = {
         'ap_list': ap_list,
         'filtered_ap_list': filtered_ap_list,
         'leaderboards': user_list,
         'provider_list': provider_list,
     }
-    return HttpResponse(template.render(context, request))
+    return render(request, 'map.html', context)
 
 @login_required
 def upload_form(request):
