@@ -6,9 +6,10 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 from django.utils.crypto import get_random_string
 
-from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey, WifiImport
+from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey
 from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, CreateWifiUserApiKeyForm
 from .decorators import api_key_required
+from .handlers import process_import, generate_v1_ap_array
 
 import json
 from requests.auth import HTTPBasicAuth
@@ -46,35 +47,9 @@ def upload_form(request):
         if form.is_valid():
             if request.user.is_superuser and form.cleaned_data['import_as'] is not None:
                 wifi_author = form.cleaned_data['import_as']
-            #TODO: create wifiuser if does not exist
-            #TODO: handle semicolons in ssids?
-            lines = request.FILES['file'].read().decode('utf-8').splitlines()
-            #print(lines)
-            wifi_import = WifiImport(author=wifi_author)
-            wifi_import.save()
-            access_points = []
-            for line in lines:
-                networkInfo = line.split(";")
-                #if AccessPoint.objects.filter(bssid=networkInfo[2].upper()).exists():
-                #    skipped += 1
-                #    continue
-                access_point = AccessPoint(
-                    latitude = None if networkInfo[0] == "null" else networkInfo[0],
-                    longitude = None if networkInfo[1] == "null" else networkInfo[1],
-                    bssid = networkInfo[2].upper(),
-                    ssid = networkInfo[3],
-                    password = networkInfo[4],
-                    author = wifi_author,
-                    wps_enabled = False,
-                    wifi_import = wifi_import
-                )
-                access_points.append(access_point)
-                #access_point.save()
-            total = AccessPoint.objects.count()
-            to_add = len(access_points)
-            AccessPoint.objects.bulk_create(access_points, ignore_conflicts=True)
-            new = AccessPoint.objects.count() - total
-            context = {'total': to_add, 'skipped': to_add - new, 'new': new}
+            import_text = request.FILES['file'].read().decode('utf-8')
+            import_results = process_import(import_text, wifi_author)
+            context = {'total': import_results.to_add, 'skipped': import_results.skipped, 'new': import_results.new}
             return render(request, 'upload_complete.html', context)
         else:
             field_errors = [ (field.label, field.errors) for field in form] 
@@ -125,24 +100,8 @@ def upload_form_json(request):
 
 @api_key_required
 def wifi_list_json(request):
-        networks = []
         ap_list = AccessPoint.objects.all().prefetch_related('author__user')
-        for ap in ap_list:
-            network = {
-                "MAC": ap.bssid,
-                "SSID": ap.ssid,
-                "WPS": "null",
-                "_id": str(ap.pk),
-                "author": ap.author.user.username,
-                "password": ap.password,
-                "position": [
-                    "null" if ap.latitude is None else str(ap.latitude),
-                    "null" if ap.longitude is None else str(ap.longitude),
-                ],
-                "status": "0",
-                "timestamp": ap.added,
-            }
-            networks.append(network)
+        networks = generate_v1_ap_array(ap_list)
         return JsonResponse(networks, safe=False)
 
 @api_key_required
