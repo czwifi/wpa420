@@ -9,7 +9,7 @@ from django.utils.crypto import get_random_string
 from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey
 from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, CreateWifiUserApiKeyForm
 from .decorators import api_key_required
-from .handlers import process_import, generate_v1_ap_array
+from .handlers import process_import, generate_v1_ap_array, render_generic_error
 
 import json
 from requests.auth import HTTPBasicAuth
@@ -122,7 +122,7 @@ def refresh_location(request):
             for ap in ap_list:
                 wigle_info = requests.get(f'https://api.wigle.net/api/v2/network/detail', params={'netid': ap.bssid.lower()}, auth=HTTPBasicAuth(form.cleaned_data['wigle_name'], form.cleaned_data['wigle_key']))
                 if wigle_info.status_code != 200:
-                    return HttpResponse("bad wigle api data")
+                    return render_generic_error(request, "bad wigle api data")
                 wigle_info = json.loads(wigle_info.text)
                 print(wigle_info)
                 if wigle_info['success'] is False and wigle_info['message'] == 'too many queries today.':
@@ -141,7 +141,7 @@ def refresh_location(request):
             }
             return render(request, 'my_imports/refresh_complete.html', context)
         else:
-            return HttpResponse("something went wrong")
+            return render_generic_error(request, "something went wrong")
     else:
         return render(request, 'my_imports/refresh.html', context)
 
@@ -259,8 +259,8 @@ def delete_api_key(request, key_id=None):
     try:
         api_key = WifiUserApiKey.objects.get(pk=key_id)
         if not api_key.wifi_user == wifi_user:
-            return HttpResponse("the key exists but it belongs to someone else")
+            return render_generic_error(request, "the key exists but it belongs to someone else")
         api_key.delete()
         return redirect('api_keys')
     except:
-        return HttpResponse("TODO: better error, key probably doesn't exist")
+        return render_generic_error(request, "the key probably doesn't exist")
