@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table border="1em">
+  <tr>
+    <th>Export format</th><th></th><th></th>
+  </tr>
+  <tr>
+  	<td>JSON v1</td>
+  	<td><a href="{% url 'export_download' 'jsonv1' %}">All access points</a></td>
+    <td><a href="{% url 'export_download' 'jsonv1' 'mine' %}">Only mine</a></td>
+  </tr>
+</table>
+{% endblock %}

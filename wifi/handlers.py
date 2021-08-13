@@ -41,14 +41,14 @@ def generate_v1_ap_array(ap_list):
             "SSID": ap.ssid,
             "WPS": "null",
             "_id": str(ap.pk),
-            "author": ap.author.user.username,
+            "author": ap.wifi_import.author.user.username,
             "password": ap.password,
             "position": [
                 "null" if ap.latitude is None else str(ap.latitude),
                 "null" if ap.longitude is None else str(ap.longitude),
             ],
             "status": "0",
-            "timestamp": ap.added,
+            "timestamp": ap.wifi_import.added,
         }
         networks.append(network)
     return networks

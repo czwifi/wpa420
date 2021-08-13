@@ -23,7 +23,7 @@ def index(request):
 @login_required
 def map(request):
     ap_list = AccessPoint.objects.all()
-    filtered_ap_list = AccessPoint.objects.exclude(latitude=None).prefetch_related('author__user')
+    filtered_ap_list = AccessPoint.objects.exclude(latitude=None).prefetch_related('wifi_import__author__user')
     user_list = WifiUser.objects.all().select_related('user').annotate(Count('accesspoint')).order_by('-accesspoint__count')
     provider_list = []
     providers = ['UPC', 'Vodafone', 'O2', 'MujO2', 'PODA', 'TP-LINK', 'ASUS']
@@ -97,11 +97,30 @@ def upload_form_json(request):
     else:
         return render(request, 'upload.html', context)
 
+@login_required
+def export(request):
+    return render(request, 'export.html')
+
 @api_key_required
 def wifi_list_json(request):
-    ap_list = AccessPoint.objects.all().prefetch_related('author__user')
+    ap_list = AccessPoint.objects.all().prefetch_related('wifi_import__author__user')
     networks = generate_v1_ap_array(ap_list)
     return JsonResponse(networks, safe=False)
+
+@login_required
+def wifi_list_downloadable(request, format=None, additional=False):
+    if additional == "mine":
+        ap_list = AccessPoint.objects.filter(wifi_import__author=WifiUser.objects.get(user=request.user)).prefetch_related('wifi_import__author__user')
+    else:
+        ap_list = AccessPoint.objects.all().prefetch_related('wifi_import__author__user')
+
+    if format == "jsonv1":
+        networks = generate_v1_ap_array(ap_list)
+        response = JsonResponse(networks, safe=False)
+        response['Content-Disposition'] = 'attachment; filename=export.json'
+        return response
+    else:
+        return render_generic_error(request, "Invalid export format")
 
 @api_key_required
 def api_dbhash(request):

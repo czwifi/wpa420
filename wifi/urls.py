@@ -5,6 +5,9 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('export', views.export, name='export'),
+    path('export/<format>', views.wifi_list_downloadable, name='export_download'),
+    path('export/<format>/<additional>', views.wifi_list_downloadable, name='export_download'),
     path('map', views.map, name='map'),
     path('upload', views.upload_form, name='upload'),
     path('upload_json', views.upload_form_json, name='upload_json'),
