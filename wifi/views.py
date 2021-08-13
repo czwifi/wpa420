@@ -180,11 +180,11 @@ def refresh_location(request):
                 'attempts': attempts,
                 'updates': updates,
             }
-            return render(request, 'refresh_complete.html', context)
+            return render(request, 'my_imports/refresh_complete.html', context)
         else:
             return HttpResponse("something went wrong")
     else:
-        return render(request, 'refresh.html', context)
+        return render(request, 'my_imports/refresh.html', context)
 
 @login_required
 def generate_invite(request):
@@ -194,7 +194,7 @@ def generate_invite(request):
     )
     invite.save()
     context = {'invite_code': invite.invite_code}
-    return render(request, 'generate_invite.html', context)
+    return render(request, 'account/generate_invite.html', context)
 
 def register(request):
     register_form = RegisterForm(request.POST)
@@ -204,11 +204,11 @@ def register(request):
                 invite = WifiUserInvite.objects.get(invite_code=register_form.cleaned_data['invite_code'], invitee=None)
             except:
                 #invalid invite code
-                return render(request, "register_error.html")
+                return render(request, "account/register_error.html")
 
             if User.objects.filter(username=register_form.cleaned_data['username']).exists():
                 #username taken
-                return render(request, "register_error.html")
+                return render(request, "account/register_error.html")
 
             user = User.objects.create_user(register_form.cleaned_data['username'], register_form.cleaned_data['email'], register_form.cleaned_data['password'])
             wifi_user = WifiUser(
@@ -222,12 +222,12 @@ def register(request):
             return redirect('login')
 
         else:
-            return render(request, "register_error.html")
+            return render(request, "account/register_error.html")
     else:
         context = {
             'form': register_form
         }
-        return render(request, "register.html", context)
+        return render(request, "account/register.html", context)
 
 @login_required
 def settings(request):
@@ -259,7 +259,7 @@ def settings(request):
         'update_message': request.method == 'POST',
         'error_message': error_message
     }
-    return render(request, "settings.html", context)
+    return render(request, "account/settings.html", context)
 
 @login_required
 def manage_api_keys(request):
@@ -268,7 +268,7 @@ def manage_api_keys(request):
     context = {
         'key_list': key_list
     }
-    return render(request, "settings_api_keys.html", context)
+    return render(request, "account/settings/api_keys.html", context)
 
 @login_required
 def create_api_key(request):
@@ -285,14 +285,14 @@ def create_api_key(request):
             context = {
                 'api_key': api_key.key
             }
-            return render(request, "create_api_key_success.html", context)
+            return render(request, "account/settings/api_keys/new_complete.html", context)
         else:
             error_message = "Invalid form input detected." #TODO: error handling
 
     context = {
         'form': form
     }
-    return render(request, "create_api_key.html", context)
+    return render(request, "account/settings/api_keys/new.html", context)
 
 @login_required
 def delete_api_key(request, key_id=None):
