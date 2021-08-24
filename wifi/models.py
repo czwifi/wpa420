@@ -70,7 +70,13 @@ class AccessPoint(models.Model):
 		FREQ_2_4G = '2_4G', _('2.4 GHz')
 		FREQ_5G = '5G', _('5 GHz')
 
+	class Source(models.TextChoices):
+		WARDRIVING = 'WARDRIVING', _('Wardriving')
+		MANUAL = 'MANUAL', _('Manual Entry')
+		CLOUD = 'CLOUD', _('Cloud')
+
 	ssid = models.CharField(max_length=32, db_index=True)
+	wigle_ssid = models.CharField(max_length=32, db_index=True, blank=True, null=True)
 	bssid = models.CharField(unique=True, max_length=17, db_index=True)
 	wps = models.CharField(max_length=8, blank=True)
 	wps_enabled = models.BooleanField()
@@ -84,6 +90,20 @@ class AccessPoint(models.Model):
 	password = models.CharField(max_length=63)
 	added = models.DateTimeField('date added', default=datetime.now) #DEPRECATED (should be taken from import)
 	location_refreshed = models.DateTimeField('date location refreshed', blank=True, null=True)
+	refresh_attempts = models.IntegerField(default=0)
+	channel = models.IntegerField(blank=True, null= True)
+	wigle_qos = models.IntegerField(blank=True, null= True)
+	city = models.CharField(blank=True, null=True, max_length=255)
+	country = models.CharField(blank=True, null=True, max_length=255)
+	wigle_firsttime = models.DateTimeField('added to wigle', blank=True, null=True) #DEPRECATED (should be taken from import)
+	wigle_lasttime = models.DateTimeField('last seen on wigle', blank=True, null=True) #DEPRECATED (should be taken from import)
+	wigle_lastupdt = models.DateTimeField('last updated on wigle', blank=True, null=True) #DEPRECATED (should be taken from import)
+	housenumber = models.CharField(blank=True, null=True, max_length=255)
+	name = models.CharField(blank=True, null=True, max_length=255)
+	postalcode = models.CharField(blank=True, null=True, max_length=255)
+	region = models.CharField(blank=True, null=True, max_length=255)
+	road = models.CharField(blank=True, null=True, max_length=255)
+	wigle_type = models.CharField(blank=True, null=True, max_length=255)
 	encryption = models.CharField(
 		max_length=4, 
 		null=True, blank=True,
