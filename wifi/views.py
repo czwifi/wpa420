@@ -6,8 +6,10 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 from django.utils.crypto import get_random_string
 
-from .models import AccessPoint, WifiUser, WifiUserInvite
-from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm
+from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey
+from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, CreateWifiUserApiKeyForm
+from .decorators import api_key_required
+from .handlers import process_import, generate_v1_ap_array, render_generic_error
 
 import json
 from requests.auth import HTTPBasicAuth
@@ -21,21 +23,20 @@ def index(request):
 @login_required
 def map(request):
     ap_list = AccessPoint.objects.all()
-    filtered_ap_list = AccessPoint.objects.exclude(latitude=None).prefetch_related('author__user')
+    filtered_ap_list = AccessPoint.objects.exclude(latitude=None).prefetch_related('wifi_import__author__user')
     user_list = WifiUser.objects.all().select_related('user').annotate(Count('accesspoint')).order_by('-accesspoint__count')
     provider_list = []
     providers = ['UPC', 'Vodafone', 'O2', 'MujO2', 'PODA', 'TP-LINK', 'ASUS']
     for provider in providers:
         provider_list.append({'provider':provider, 'ap_count': AccessPoint.objects.filter(ssid__startswith=provider).count()})
     provider_list.sort(key=lambda x: x['ap_count'], reverse=True)
-    template = loader.get_template('map.html')
     context = {
         'ap_list': ap_list,
         'filtered_ap_list': filtered_ap_list,
         'leaderboards': user_list,
         'provider_list': provider_list,
     }
-    return HttpResponse(template.render(context, request))
+    return render(request, 'map.html', context)
 
 @login_required
 def upload_form(request):
@@ -45,32 +46,9 @@ def upload_form(request):
         if form.is_valid():
             if request.user.is_superuser and form.cleaned_data['import_as'] is not None:
                 wifi_author = form.cleaned_data['import_as']
-            #TODO: create wifiuser if does not exist
-            #TODO: handle semicolons in ssids?
-            lines = request.FILES['file'].read().decode('utf-8').splitlines()
-            print(lines)
-            access_points = []
-            for line in lines:
-                networkInfo = line.split(";")
-                #if AccessPoint.objects.filter(bssid=networkInfo[2].upper()).exists():
-                #    skipped += 1
-                #    continue
-                access_point = AccessPoint(
-                    latitude = None if networkInfo[0] == "null" else networkInfo[0],
-                    longitude = None if networkInfo[1] == "null" else networkInfo[1],
-                    bssid = networkInfo[2].upper(),
-                    ssid = networkInfo[3],
-                    password = networkInfo[4],
-                    author = wifi_author,
-                    wps_enabled = False,
-                )
-                access_points.append(access_point)
-                #access_point.save()
-            total = AccessPoint.objects.count()
-            to_add = len(access_points)
-            AccessPoint.objects.bulk_create(access_points, ignore_conflicts=True)
-            new = AccessPoint.objects.count() - total
-            context = {'total': to_add, 'skipped': to_add - new, 'new': new}
+            import_text = request.FILES['file'].read().decode('utf-8')
+            import_results = process_import(import_text, wifi_author)
+            context = {'total': import_results.to_add, 'skipped': import_results.skipped, 'new': import_results.new}
             return render(request, 'upload_complete.html', context)
         else:
             field_errors = [ (field.label, field.errors) for field in form] 
@@ -111,7 +89,7 @@ def upload_form_json(request):
                 access_point.added = network["timestamp"]
                 access_points.append(access_point)
             AccessPoint.objects.bulk_create(access_points, ignore_conflicts=True)
-            context = {'total': len(access_points), 'skipped': 'didnt calculate', 'new': 'didnt calculate'}
+            context = {'total': len(access_points), 'skipped': 'didnt calculate', 'new': 'Please also run the fixtimestamps and createimports commands in CLI'}
             return render(request, 'upload_complete.html', context)
         else:
             field_errors = [ (field.label, field.errors) for field in form] 
@@ -119,27 +97,32 @@ def upload_form_json(request):
     else:
         return render(request, 'upload.html', context)
 
+@login_required
+def export(request):
+    return render(request, 'export.html')
+
+@api_key_required
 def wifi_list_json(request):
-    networks = []
-    ap_list = AccessPoint.objects.all().prefetch_related('author__user')
-    for ap in ap_list:
-        network = {
-            "MAC": ap.bssid,
-            "SSID": ap.ssid,
-            "WPS": "null",
-            "_id": str(ap.pk),
-            "author": ap.author.user.username,
-            "password": ap.password,
-            "position": [
-                "null" if ap.latitude is None else str(ap.latitude),
-                "null" if ap.longitude is None else str(ap.longitude),
-            ],
-            "status": "0",
-            "timestamp": ap.added,
-        }
-        networks.append(network)
+    ap_list = AccessPoint.objects.all().prefetch_related('wifi_import__author__user')
+    networks = generate_v1_ap_array(ap_list)
     return JsonResponse(networks, safe=False)
 
+@login_required
+def wifi_list_downloadable(request, format=None, additional=False):
+    if additional == "mine":
+        ap_list = AccessPoint.objects.filter(wifi_import__author=WifiUser.objects.get(user=request.user)).prefetch_related('wifi_import__author__user')
+    else:
+        ap_list = AccessPoint.objects.all().prefetch_related('wifi_import__author__user')
+
+    if format == "jsonv1":
+        networks = generate_v1_ap_array(ap_list)
+        response = JsonResponse(networks, safe=False)
+        response['Content-Disposition'] = 'attachment; filename=export.json'
+        return response
+    else:
+        return render_generic_error(request, "Invalid export format")
+
+@api_key_required
 def api_dbhash(request):
     # since this is only used for validation whether the db needs update
     # we will return the hash of the latest timestamp for now
@@ -157,7 +140,7 @@ def refresh_location(request):
             for ap in ap_list:
                 wigle_info = requests.get(f'https://api.wigle.net/api/v2/network/detail', params={'netid': ap.bssid.lower()}, auth=HTTPBasicAuth(form.cleaned_data['wigle_name'], form.cleaned_data['wigle_key']))
                 if wigle_info.status_code != 200:
-                    return HttpResponse("bad wigle api data")
+                    return render_generic_error(request, "bad wigle api data")
                 wigle_info = json.loads(wigle_info.text)
                 print(wigle_info)
                 if wigle_info['success'] is False and wigle_info['message'] == 'too many queries today.':
@@ -174,11 +157,11 @@ def refresh_location(request):
                 'attempts': attempts,
                 'updates': updates,
             }
-            return render(request, 'refresh_complete.html', context)
+            return render(request, 'my_imports/refresh_complete.html', context)
         else:
-            return HttpResponse("something went wrong")
+            return render_generic_error(request, "something went wrong")
     else:
-        return render(request, 'refresh.html', context)
+        return render(request, 'my_imports/refresh.html', context)
 
 @login_required
 def generate_invite(request):
@@ -188,7 +171,7 @@ def generate_invite(request):
     )
     invite.save()
     context = {'invite_code': invite.invite_code}
-    return render(request, 'generate_invite.html', context)
+    return render(request, 'account/generate_invite.html', context)
 
 def register(request):
     register_form = RegisterForm(request.POST)
@@ -198,11 +181,11 @@ def register(request):
                 invite = WifiUserInvite.objects.get(invite_code=register_form.cleaned_data['invite_code'], invitee=None)
             except:
                 #invalid invite code
-                return render(request, "register_error.html")
+                return render(request, "account/register_error.html")
 
             if User.objects.filter(username=register_form.cleaned_data['username']).exists():
                 #username taken
-                return render(request, "register_error.html")
+                return render(request, "account/register_error.html")
 
             user = User.objects.create_user(register_form.cleaned_data['username'], register_form.cleaned_data['email'], register_form.cleaned_data['password'])
             wifi_user = WifiUser(
@@ -216,12 +199,12 @@ def register(request):
             return redirect('login')
 
         else:
-            return render(request, "register_error.html")
+            return render(request, "account/register_error.html")
     else:
         context = {
             'form': register_form
         }
-        return render(request, "register.html", context)
+        return render(request, "account/register.html", context)
 
 @login_required
 def settings(request):
@@ -253,4 +236,49 @@ def settings(request):
         'update_message': request.method == 'POST',
         'error_message': error_message
     }
-    return render(request, "settings.html", context)
+    return render(request, "account/settings.html", context)
+
+@login_required
+def manage_api_keys(request):
+    wifi_user = WifiUser.objects.get(user=request.user)
+    key_list = WifiUserApiKey.objects.filter(wifi_user=wifi_user).order_by('-used')
+    context = {
+        'key_list': key_list
+    }
+    return render(request, "account/settings/api_keys.html", context)
+
+@login_required
+def create_api_key(request):
+    wifi_user = WifiUser.objects.get(user=request.user)
+    form = CreateWifiUserApiKeyForm(request.POST)
+    if request.method == 'POST':
+        if form.is_valid():
+            api_key = WifiUserApiKey(
+                key = get_random_string(length=32),
+                wifi_user = wifi_user,
+                description = form.cleaned_data['description']
+            )
+            api_key.save()
+            context = {
+                'api_key': api_key.key
+            }
+            return render(request, "account/settings/api_keys/new_complete.html", context)
+        else:
+            error_message = "Invalid form input detected." #TODO: error handling
+
+    context = {
+        'form': form
+    }
+    return render(request, "account/settings/api_keys/new.html", context)
+
+@login_required
+def delete_api_key(request, key_id=None):
+    wifi_user = WifiUser.objects.get(user=request.user)
+    try:
+        api_key = WifiUserApiKey.objects.get(pk=key_id)
+        if not api_key.wifi_user == wifi_user:
+            return render_generic_error(request, "the key exists but it belongs to someone else")
+        api_key.delete()
+        return redirect('api_keys')
+    except:
+        return render_generic_error(request, "the key probably doesn't exist")
