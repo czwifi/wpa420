@@ -64,6 +64,7 @@ class AccessPoint(models.Model):
 		WPA = 'WPA', _('WPA')
 		WPA2 = 'WPA2', _('WPA2')
 		WPA3 = 'WPA3', _('WPA3')
+		NONE = 'NONE', _('None')
 
 	class Frequency(models.TextChoices):
 		FREQ_2_4G = '2_4G', _('2.4 GHz')
@@ -82,16 +83,18 @@ class AccessPoint(models.Model):
 	longitude = models.DecimalField(max_digits=11, decimal_places=8, null=True, blank=True, db_index=True)
 	password = models.CharField(max_length=63)
 	added = models.DateTimeField('date added', default=datetime.now) #DEPRECATED (should be taken from import)
-	location_refreshed = models.DateTimeField('date location refreshed', blank=True, null=True, default=datetime.now)
+	location_refreshed = models.DateTimeField('date location refreshed', blank=True, null=True)
 	encryption = models.CharField(
 		max_length=4, 
+		null=True, blank=True,
 		choices=Encryption.choices, 
-		default=Encryption.WPA2,
+		#default=Encryption.WPA2,
 	)
 	frequency = models.CharField(
 		max_length=4, 
+		null=True, blank=True,
 		choices=Frequency.choices, 
-		default=Frequency.FREQ_2_4G,
+		#default=Frequency.FREQ_2_4G,
 	)
 	wifi_import = models.ForeignKey(
 		WifiImport,
