@@ -39,7 +39,7 @@ def generate_v1_ap_array(ap_list):
         network = {
             "MAC": ap.bssid,
             "SSID": ap.ssid,
-            "WPS": "null",
+            "WPS": str(ap.wps),
             "_id": str(ap.pk),
             "author": ap.wifi_import.author.user.username,
             "password": ap.password,
