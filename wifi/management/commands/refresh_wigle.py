@@ -12,7 +12,11 @@ class TooManyQueriesToday(Exception):
     pass
 
 class Command(BaseCommand):
-    help = 'Resets timestamps to align with import times'
+    help = 'Loads Wigle info for all networks'
+
+    def add_arguments(self, parser):
+        parser.add_argument('wigle_name')
+        parser.add_argument('wigle_key')
 
     def refresh_ap(self, ap, wigle_name, wigle_key):
         wigle_info = requests.get(f'https://api.wigle.net/api/v2/network/detail', params={'netid': ap.bssid.lower()}, auth=HTTPBasicAuth(wigle_name, wigle_key))
@@ -42,12 +46,15 @@ class Command(BaseCommand):
             ap.region = ap_info['region']
             ap.road = ap_info['road']
             ap.wigle_ssid = ap_info['ssid']
+            ap.wigle_qos = ap_info['qos']
             ap.wigle_type = ap_info['type']
+            if ap.frequency == None:
+                ap.frequency = AccessPoint.Frequency.FREQ_2_4G if ap.channel <= 14 else AccessPoint.Frequency.FREQ_5G
         ap.save()
         print(f"{ap.bssid}")
         #print(wigle_info)
 
     def handle(self, *args, **options):
-        ap_list = AccessPoint.objects.all().order_by('location_refreshed')
+        ap_list = AccessPoint.objects.filter(wigle_ssid=None).order_by('location_refreshed')
         for ap in ap_list:
-            self.refresh_ap(ap, "api name", "api password")
+            self.refresh_ap(ap, options['wigle_name'], options['wigle_key'])
