@@ -55,6 +55,6 @@ class Command(BaseCommand):
         #print(wigle_info)
 
     def handle(self, *args, **options):
-        ap_list = AccessPoint.objects.filter(wigle_ssid=None).order_by('location_refreshed')
+        ap_list = AccessPoint.objects.filter(wigle_ssid=None, refresh_attempts=0).order_by('location_refreshed')
         for ap in ap_list:
             self.refresh_ap(ap, options['wigle_name'], options['wigle_key'])
