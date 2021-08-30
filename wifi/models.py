@@ -48,11 +48,25 @@ class WifiUserInvite(models.Model):
 		return f"{self.author} : {self.invitee}"
 
 class WifiImport(models.Model):
+
+	class Source(models.TextChoices):
+		WARDRIVING = 'wardriving', _('Wardriving')
+		MANUAL = 'manual', _('Manual Entry')
+		CLOUD = 'cloud', _('Cloud')
+
 	author = models.ForeignKey(
 		WifiUser,
 		on_delete=models.CASCADE,
 		db_index=True,
 	)
+
+	source = models.CharField(
+		max_length=10, 
+		null=True, blank=True,
+		choices=Source.choices, 
+		#default=Frequency.FREQ_2_4G,
+	)
+
 	added = models.DateTimeField('date added', default=datetime.now)
 	def __str__(self):
 		return f"{self.author} - {self.added}"
@@ -60,11 +74,11 @@ class WifiImport(models.Model):
 class AccessPoint(models.Model):
 
 	class Encryption(models.TextChoices):
-		WEP = 'WEP', _('WEP')
-		WPA = 'WPA', _('WPA')
-		WPA2 = 'WPA2', _('WPA2')
-		WPA3 = 'WPA3', _('WPA3')
-		NONE = 'NONE', _('None')
+		WEP = 'wep', _('WEP')
+		WPA = 'wpa', _('WPA')
+		WPA2 = 'wpa2', _('WPA2')
+		WPA3 = 'wpa3', _('WPA3')
+		NONE = 'none', _('None')
 
 	class Frequency(models.TextChoices):
 		FREQ_2_4G = '2_4G', _('2.4 GHz')
@@ -74,22 +88,11 @@ class AccessPoint(models.Model):
 	bssid = models.CharField(unique=True, max_length=17, db_index=True)
 	wps = models.CharField(max_length=8, blank=True)
 	wps_enabled = models.BooleanField()
-	author = models.ForeignKey(
-		WifiUser,
-		on_delete=models.CASCADE,
-		db_index=True,
-	) #DEPRECATED (should be taken from import)
 	latitude = models.DecimalField(max_digits=11, decimal_places=8, null=True, blank=True, db_index=True)
 	longitude = models.DecimalField(max_digits=11, decimal_places=8, null=True, blank=True, db_index=True)
 	password = models.CharField(max_length=63)
-	added = models.DateTimeField('date added', default=datetime.now) #DEPRECATED (should be taken from import)
 	location_refreshed = models.DateTimeField('date location refreshed', blank=True, null=True)
-	encryption = models.CharField(
-		max_length=4, 
-		null=True, blank=True,
-		choices=Encryption.choices, 
-		#default=Encryption.WPA2,
-	)
+	refresh_attempts = models.IntegerField(default=0)
 	frequency = models.CharField(
 		max_length=4, 
 		null=True, blank=True,
@@ -101,6 +104,37 @@ class AccessPoint(models.Model):
 		on_delete=models.CASCADE,
 		db_index=True,
 		null=True, blank=True,
+	)
+
+	#Deprecated fields
+	## Should be taken from import
+	author = models.ForeignKey(
+		WifiUser,
+		on_delete=models.CASCADE,
+		db_index=True,
+	)
+	added = models.DateTimeField('date added', default=datetime.now)
+
+	#Wigle Data
+	wigle_ssid = models.CharField(max_length=32, db_index=True, blank=True, null=True)
+	channel = models.IntegerField(blank=True, null= True)
+	wigle_qos = models.IntegerField(blank=True, null= True)
+	city = models.CharField(blank=True, null=True, max_length=255)
+	country = models.CharField(blank=True, null=True, max_length=255)
+	wigle_firsttime = models.DateTimeField('added to wigle', blank=True, null=True)
+	wigle_lasttime = models.DateTimeField('last seen on wigle', blank=True, null=True)
+	wigle_lastupdt = models.DateTimeField('last updated on wigle', blank=True, null=True)
+	housenumber = models.CharField(blank=True, null=True, max_length=255)
+	name = models.CharField(blank=True, null=True, max_length=255)
+	postalcode = models.CharField(blank=True, null=True, max_length=255)
+	region = models.CharField(blank=True, null=True, max_length=255)
+	road = models.CharField(blank=True, null=True, max_length=255)
+	wigle_type = models.CharField(blank=True, null=True, max_length=255)
+	encryption = models.CharField(
+		max_length=4, 
+		null=True, blank=True,
+		choices=Encryption.choices, 
+		#default=Encryption.WPA2,
 	)
 	def __str__(self):
 		return f"{self.bssid} - {self.ssid}"
