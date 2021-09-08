@@ -1,6 +1,8 @@
 from django.shortcuts import render
+from django.http import JsonResponse
+from django.utils.crypto import get_random_string
 
-from .models import AccessPoint, WifiImport
+from .models import AccessPoint, WifiImport, WifiUserApiKey
 
 class ImportResults:
 	def __init__(self, to_add, new):
@@ -53,5 +55,19 @@ def generate_v1_ap_array(ap_list):
         networks.append(network)
     return networks
 
+def generate_api_key(wifi_user, description):
+    api_key = WifiUserApiKey(
+        key = get_random_string(length=32),
+        wifi_user = wifi_user,
+        description = description
+    )
+    api_key.save()
+    return api_key
+
+
 def render_generic_error(request, error_text):
 	return render(request, "account/error.html", {'error': error_text})
+
+def render_json_error(request, error_text):
+    response = {"success": False, "error_text": error_text}
+    return JsonResponse(response, safe=False)
