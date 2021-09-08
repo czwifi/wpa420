@@ -121,7 +121,10 @@ def api_get_api_key(request):
         wifi_user = WifiUser.objects.get(user=user)
         if wifi_user is None:
             return render_json_error(request, "WifiUser does not exist")
-        api_key = generate_api_key(wifi_user, request.POST.get('description', 'Unnamed app'))
+        try:
+            api_key = generate_api_key(wifi_user, request.POST.get('description', 'Unnamed app'))
+        except:
+            return render_json_error(request, "Unable to get API key")
         response = {"success": True, "api_key": api_key.key}
         return JsonResponse(response, safe=False)
     else:
