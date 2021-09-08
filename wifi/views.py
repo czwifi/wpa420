@@ -114,8 +114,6 @@ def wifi_list_json(request):
 
 @csrf_exempt
 def api_get_api_key(request):
-    print(request.POST)
-    print(request.body)
     if request.method == 'POST':
         user = authenticate(username=request.POST.get('username', ''), password=request.POST.get('password', ''))
         if user is None:
