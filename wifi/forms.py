@@ -24,3 +24,8 @@ class SettingsForm(forms.Form):
 
 class CreateWifiUserApiKeyForm(forms.Form):
 	description = forms.CharField(label='Description')
+
+class ApiKeyForm(forms.Form):
+	username = forms.CharField(label='Username', max_length=150)
+	password = forms.CharField(label='Password', widget=forms.PasswordInput)
+	description = forms.CharField(label='Description')

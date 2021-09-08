@@ -12,6 +12,7 @@ urlpatterns = [
     path('upload', views.upload_form, name='upload'),
     path('upload_json', views.upload_form_json, name='upload_json'),
     path('api/mobapp/getCollection', views.wifi_list_json, name='api_getCollection'),
+    path('api/mobapp/getApiKey', views.api_get_api_key, name='api_getApiKey'),
     path('api/mobapp/dbHash', views.api_dbhash, name='api_dbHash'),
     path('account/login', auth_views.LoginView.as_view(template_name='account/login.html'), name='login'),
     path('account/logout', auth_views.LogoutView.as_view(template_name='account/logout.html'), name='logout'),

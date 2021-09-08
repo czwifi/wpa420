@@ -1,15 +1,18 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
+from django.contrib.auth import authenticate
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.db.models import Count
 from django.utils.crypto import get_random_string
+from django.views.decorators.csrf import csrf_exempt
+
 
 from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey
-from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, CreateWifiUserApiKeyForm
+from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, CreateWifiUserApiKeyForm, ApiKeyForm
 from .decorators import api_key_required
-from .handlers import process_import, generate_v1_ap_array, render_generic_error
+from .handlers import process_import, generate_v1_ap_array, render_generic_error, render_json_error, generate_api_key
 
 import json
 from requests.auth import HTTPBasicAuth
@@ -108,6 +111,24 @@ def wifi_list_json(request):
     ap_list = AccessPoint.objects.all().prefetch_related('wifi_import__author__user')
     networks = generate_v1_ap_array(ap_list)
     return JsonResponse(networks, safe=False)
+
+@csrf_exempt
+def api_get_api_key(request):
+    print(request.POST)
+    print(request.body)
+    if request.method == 'POST':
+        user = authenticate(username=request.POST.get('username', ''), password=request.POST.get('password', ''))
+        if user is None:
+            return render_json_error(request, "Invalid login credentials")
+        wifi_user = WifiUser.objects.get(user=user)
+        if wifi_user is None:
+            return render_json_error(request, "WifiUser does not exist")
+        api_key = generate_api_key(wifi_user, request.POST.get('description', 'Unnamed app'))
+        response = {"success": True, "api_key": api_key.key}
+        return JsonResponse(response, safe=False)
+    else:
+        return render_json_error(request, "Invalid form data")
+
 
 @login_required
 def wifi_list_downloadable(request, format=None, additional=False):
@@ -231,7 +252,7 @@ def settings(request):
             wifi_user.marker_color = settings_form.cleaned_data['marker_color'].replace('#','')
             wifi_user.save()
         else:
-            error_message = "Invalid form input detected."
+            render_generic_error(request, "Invalid form input detected.")
 
     context = {
         'form': settings_form,
@@ -255,18 +276,13 @@ def create_api_key(request):
     form = CreateWifiUserApiKeyForm(request.POST)
     if request.method == 'POST':
         if form.is_valid():
-            api_key = WifiUserApiKey(
-                key = get_random_string(length=32),
-                wifi_user = wifi_user,
-                description = form.cleaned_data['description']
-            )
-            api_key.save()
+            api_key = generate_api_key(wifi_user, form.cleaned_data['description'])
             context = {
                 'api_key': api_key.key
             }
             return render(request, "account/settings/api_keys/new_complete.html", context)
         else:
-            error_message = "Invalid form input detected." #TODO: error handling
+            return render_generic_error(request, "Invalid form input detected.") #TODO: error handling
 
     context = {
         'form': form
