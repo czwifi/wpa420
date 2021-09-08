@@ -125,7 +125,7 @@ def api_get_api_key(request):
         response = {"success": True, "api_key": api_key.key}
         return JsonResponse(response, safe=False)
     else:
-        return render_json_error(request, "Invalid form data")
+        return render_json_error(request, "Invalid request type")
 
 
 @login_required
