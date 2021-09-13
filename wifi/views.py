@@ -25,9 +25,9 @@ def index(request):
 
 @login_required
 def map(request):
-    ap_list = AccessPoint.objects.all()
-    filtered_ap_list = AccessPoint.objects.exclude(latitude=None).prefetch_related('wifi_import__author__user')
-    unprocessed_ap_list = AccessPoint.objects.filter(refresh_attempts=0)
+    ap_count = AccessPoint.objects.all().count()
+    filtered_ap_count = AccessPoint.objects.exclude(latitude=None).prefetch_related('wifi_import__author__user').count()
+    unprocessed_ap_count = AccessPoint.objects.filter(refresh_attempts=0).count()
     user_list = WifiUser.objects.all().select_related('user').annotate(Count('wifiimport__accesspoint')).order_by('-wifiimport__accesspoint__count')
     provider_list = []
     providers = ['UPC', 'Vodafone', 'O2', 'MujO2', 'PODA', 'TP-LINK', 'ASUS']
@@ -35,9 +35,9 @@ def map(request):
         provider_list.append({'provider':provider, 'ap_count': AccessPoint.objects.filter(ssid__startswith=provider).count()})
     provider_list.sort(key=lambda x: x['ap_count'], reverse=True)
     context = {
-        'ap_list': ap_list,
-        'filtered_ap_list': filtered_ap_list,
-        'unprocessed_ap_list': unprocessed_ap_list,
+        'ap_count': ap_count,
+        'filtered_ap_count': filtered_ap_count,
+        'unprocessed_ap_count': unprocessed_ap_count,
         'leaderboards': user_list,
         'provider_list': provider_list,
     }
