@@ -27,7 +27,7 @@
    <p>Leaderboards:</p>
    <ul>
    	{% for user in leaderboards %}
-   	<li>{{ user.user }}: {{ user.wifiimport__accesspoint__count }} ({% widthratio user.wifiimport__accesspoint__count ap_list.count 100 %}%)</li>
+   	<li>{{ user.user }}: {{ user.wifiimport__accesspoint__count }} ({% widthratio user.wifiimport__accesspoint__count ap_count 100 %}%)</li>
    	{% endfor %}
    </ul>
    <p>Providers:</p>
