@@ -58,11 +58,11 @@
         var apGroups = {};
         accessPoints.forEach((entry) => {
           var marker = L.circleMarker([entry.position[0], entry.position[1]]);
-          marker.bindPopup(`<b>SSID:</b> ${entry.SSID}<br><b>BSSID:</b> ${entry.BSSID}<br><b>Password:</b> ${entry.password}</b><br><b>Added on:</b> ${entry.timestamp}<br><b>Found by:</b> ${entry.author}<br><a href="https://wigle.net/search?netid=${entry.BSSID}">More info...</a>`).openPopup();
-          marker.setStyle({color: `#${entry[6]}`});
-          if(typeof apGroups[entry[7]] === 'undefined')
-            apGroups[entry[7]] = [];
-          apGroups[entry[7]].push(marker);
+          marker.bindPopup(`<b>SSID:</b> ${entry.SSID}<br><b>BSSID:</b> ${entry.MAC}<br><b>Password:</b> ${entry.password}</b><br><b>Added on:</b> ${entry.timestamp}<br><b>Found by:</b> ${entry.author}<br><a href="https://wigle.net/search?netid=${entry.BSSID}">More info...</a>`).openPopup();
+          marker.setStyle({color: `#${entry.marker_color}`});
+          if(typeof apGroups[entry.author] === 'undefined')
+            apGroups[entry.author] = [];
+          apGroups[entry.author].push(marker);
           //cluster.addLayer(marker)
         });
 
@@ -108,7 +108,6 @@
 
       mymap.addLayer(cluster);
 
-      showMapData();
       //geolocation (you are here marker)
       var locationOptions = {
         enableHighAccuracy: true,
