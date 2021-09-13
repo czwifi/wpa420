@@ -51,8 +51,7 @@ def upload_form(request):
         if form.is_valid():
             if request.user.is_superuser and form.cleaned_data['import_as'] is not None:
                 wifi_author = form.cleaned_data['import_as']
-            import_text = request.FILES['file'].read().decode('utf-8')
-            import_results = process_import(import_text, wifi_author)
+            import_results = process_import(request.FILES['file'], wifi_author)
             context = {'total': import_results.to_add, 'skipped': import_results.skipped, 'new': import_results.new}
             return render(request, 'upload_complete.html', context)
         else:

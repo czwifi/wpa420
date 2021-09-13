@@ -11,12 +11,16 @@ class ImportResults:
 		self.skipped = to_add - new
 
 #TODO: handle semicolons in ssids?
-def process_import(import_text, wifi_author):
-    lines = import_text.splitlines()
+def process_import(import_file, wifi_author):
+    lines = import_file.readlines()
     wifi_import = WifiImport(author=wifi_author)
     wifi_import.save()
     access_points = []
     for line in lines:
+        try:
+            line = line.decode('utf-8')
+        except:
+            line = line.decode('cp1250')
         networkInfo = line.split(";")
         access_point = AccessPoint(
             latitude = None if networkInfo[0] == "null" else networkInfo[0],
