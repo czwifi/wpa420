@@ -17,10 +17,17 @@ def process_import(import_file, wifi_author):
     wifi_import.save()
     access_points = []
     for line in lines:
+        #workaround because the wifi standard doesn't specify an encoding
         try:
             line = line.decode('utf-8')
         except:
             line = line.decode('cp1250')
+
+        #avoid trailing newlines caused by the file itself
+        #TODO: check if the number of semicolons matches the expected amount and tell the user if it doesn't
+        if len(line) > 0 and line[-1] == '\n':
+            line = line[:-1]
+
         networkInfo = line.split(";")
         access_point = AccessPoint(
             latitude = None if networkInfo[0] == "null" else networkInfo[0],
