@@ -57,6 +57,7 @@ def upload_form(request):
         else:
             field_errors = [ (field.label, field.errors) for field in form] 
             print(field_errors)
+            return render_generic_error(request, "Invalid form input")
     else:
         context = {'form': form}
         return render(request, 'upload.html', context)
