@@ -3,7 +3,7 @@ from .models import WifiUser
 
 class UploadFileForm(forms.Form):
 	file = forms.FileField(label='Select a file')
-	import_as = forms.ModelChoiceField(queryset=WifiUser.objects.all().select_related('user').order_by('user__username'))
+	import_as = forms.ModelChoiceField(queryset=WifiUser.objects.all().select_related('user').order_by('user__username'), required=False)
 
 
 class WigleForm(forms.Form):
