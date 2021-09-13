@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-{% if filtered_ap_list %}
+
  	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
    crossorigin=""/>
@@ -20,7 +20,7 @@
        L_PREFER_CANVAS = true; // experimental
    </script>
 
-	<p>Total networks: {{ ap_list.count }} // {{ filtered_ap_list.count }} geolocated ({% widthratio filtered_ap_list.count ap_list.count 100 %}%) // {{ unprocessed_ap_list.count }} unprocessed ({% widthratio unprocessed_ap_list.count ap_list.count 100 %}%) // <a href="#" onclick="toggleLocation(); return false;">Toggle location marker</a> // <a href="#" onclick="centerMapLocation(); return false;">Move map to my location</a></p>
+	<p>Total networks: {{ ap_count }} // {{ filtered_ap_count }} geolocated ({% widthratio filtered_ap_count ap_count 100 %}%) // {{ unprocessed_ap_count }} unprocessed ({% widthratio unprocessed_ap_count ap_count 100 %}%) // <a href="#" onclick="toggleLocation(); return false;">Toggle location marker</a> // <a href="#" onclick="centerMapLocation(); return false;">Move map to my location</a></p>
 
 <div class="container" id="mapid"></div>
 
@@ -211,48 +211,12 @@
     navigator.geolocation.watchPosition(onLocationUpdate, onLocationError, locationOptions);
   }
 
-  function addLocationMarker(coords) {
-    locationMarker = L.marker([coords.latitude, coords.longitude]).addTo(mymap);
-    locationMarker.bindPopup(
-      '<p>You are here!<br><a id="hideLocationMarkerLink" href="#" onclick="toggleLocation();return false;">Hide marker</a></p>'
-      );
-  }
-
-  function onLocationError(err) {
-    console.warn(`ERROR(${err.code}): ${err.message}`);
-  }
-
-  function toggleLocation() {
-    if (mymap.hasLayer(locationMarker)) {
-      mymap.removeLayer(locationMarker);
-    } else {
-      if (typeof coords === 'undefined')
-        navigator.geolocation.getCurrentPosition(onInitialLocationSuccess, onLocationError, locationOptions);
-      else
-        addLocationMarker(coords)
-    }
-  }
-
-  function onLocationUpdate(pos) {
-    coords = pos.coords
-    if (mymap.hasLayer(locationMarker))
-      locationMarker.setLatLng([pos.coords.latitude, pos.coords.longitude]);
-  }
-
-  function centerMapLocation() {
-    navigator.geolocation.getCurrentPosition(onCenterLocationSuccess, onLocationError, locationOptions);
-  }
-
-  function onCenterLocationSuccess(pos) {
-    mymap.panTo([pos.coords.latitude, pos.coords.longitude]);
-    if (!mymap.hasLayer(locationMarker)) {
-      onInitialLocationSuccess(pos);
-    }
-  }
-</script>
-
-{% else %}
-<p>No networks are available.</p>
-{% endif %}
+      function onCenterLocationSuccess(pos){
+        mymap.panTo([pos.coords.latitude, pos.coords.longitude]);
+        if(!mymap.hasLayer(locationMarker)){
+          onInitialLocationSuccess(pos);
+        }
+      }
+   </script>
 
 {% endblock %}
