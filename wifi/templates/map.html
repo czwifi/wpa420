@@ -26,12 +26,22 @@
 
 <div class="container" id="mapid"></div>
 
-<div class="row">
-  <div class="col">
-    <table class="leaderboardsTable">
-      <tr>
-        <th>Leaderboards</th>
-      </tr>
+   <p>Leaderboards:</p>
+   <ul>
+   	{% for user in leaderboards %}
+   	<li>{{ user.user }}: {{ user.wifiimport__accesspoint__count }} ({% widthratio user.wifiimport__accesspoint__count ap_list.count 100 %}%)</li>
+   	{% endfor %}
+   </ul>
+   <p>Providers:</p>
+   <ul>
+   	{% for provider in provider_list %}
+   	<li>{{ provider.provider }}: {{ provider.ap_count }}</li>
+   	{% endfor %}
+   </ul>
+   <p>Other:</p>
+   <ul>
+    <li><a href="{% url 'export' %}">Export data</a></li>
+  </ul>
 
       {% for user in leaderboards %}
         <tr>
