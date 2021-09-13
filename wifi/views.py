@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 from django.utils.crypto import get_random_string
 from django.views.decorators.csrf import csrf_exempt
+from django.core.cache import cache
 
 
 from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey
@@ -114,9 +115,14 @@ def wifi_list_json(request):
 
 @login_required
 def data_wifi_list_json(request):
+    response = cache.get('data_wifi_list_json')
+    if response is not None:
+        return response
     ap_list = AccessPoint.objects.exclude(latitude=None).prefetch_related('wifi_import__author__user')
     networks = generate_v1_ap_array(ap_list)
-    return JsonResponse(networks, safe=False)
+    response = JsonResponse(networks, safe=False)
+    cache.set('data_wifi_list_json', response, None)
+    return response
 
 @csrf_exempt
 def api_get_api_key(request):
