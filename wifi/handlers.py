@@ -62,6 +62,7 @@ def generate_v1_ap_array(ap_list):
             ],
             "status": "0",
             "timestamp": ap.wifi_import.added,
+            "marker_color": ap.wifi_import.author.marker_color,
         }
         networks.append(network)
     return networks
