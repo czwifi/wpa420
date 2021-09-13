@@ -112,6 +112,12 @@ def wifi_list_json(request):
     networks = generate_v1_ap_array(ap_list)
     return JsonResponse(networks, safe=False)
 
+@login_required
+def data_wifi_list_json(request):
+    ap_list = AccessPoint.objects.exclude(latitude=None).prefetch_related('wifi_import__author__user')
+    networks = generate_v1_ap_array(ap_list)
+    return JsonResponse(networks, safe=False)
+
 @csrf_exempt
 def api_get_api_key(request):
     if request.method == 'POST':

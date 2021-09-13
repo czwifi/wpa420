@@ -12,6 +12,7 @@
    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" crossorigin="">
    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" crossorigin=""></script>
    <script src="https://unpkg.com/leaflet.featuregroup.subgroup@1.0.2/dist/leaflet.featuregroup.subgroup.js"></script>
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> 
    <style>
    	#mapid { height: 700px; }
    </style>
@@ -43,6 +44,45 @@
     <script type="text/javascript">
       //map creation
       var mymap = L.map('mapid').setView([50.0755, 14.4378], 13);
+
+      //grouping access points
+      var cluster = L.markerClusterGroup({
+        maxClusterRadius: 250,
+        removeOutsideVisibleBounds: true,
+        spiderifyOnMaxZoom: false,
+        disableClusteringAtZoom: 16
+      });
+
+      //access points
+      $.getJSON('{% url 'data_wifi_list_json' %}', function(accessPoints) {
+        var apGroups = {};
+        accessPoints.forEach((entry) => {
+          var marker = L.circleMarker([entry.position[0], entry.position[1]]);
+          marker.bindPopup(`<b>SSID:</b> ${entry.SSID}<br><b>BSSID:</b> ${entry.BSSID}<br><b>Password:</b> ${entry.password}</b><br><b>Added on:</b> ${entry.timestamp}<br><b>Found by:</b> ${entry.author}<br><a href="https://wigle.net/search?netid=${entry.BSSID}">More info...</a>`).openPopup();
+          marker.setStyle({color: `#${entry[6]}`});
+          if(typeof apGroups[entry[7]] === 'undefined')
+            apGroups[entry[7]] = [];
+          apGroups[entry[7]].push(marker);
+          //cluster.addLayer(marker)
+        });
+
+        //adding the access point cluster onto the map
+        var baseLayers = {
+          "Streets": streets,
+          "Satellite": satellite,
+          "Dark": dark,
+        };
+
+        var overlays = {};
+        for (const apGroup in apGroups) {
+          var mySubGroup = L.featureGroup.subGroup(cluster, apGroups[apGroup]);
+          overlays[apGroup] = mySubGroup;
+          mymap.addLayer(mySubGroup);
+        }
+
+        L.control.layers(baseLayers, overlays).addTo(mymap);
+      });
+
       //map types
       var streets = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibjN0dHgiLCJhIjoiY2thdjV6ZHk0MDhtazMzcGNoYTl1cHUwYyJ9.zah7JmDF59WE2UQOcdq98w', {
         attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
@@ -65,45 +105,10 @@
         tileSize: 512,
         zoomOffset: -1,
       })
-      //grouping access points
-      var cluster = L.markerClusterGroup({
-        maxClusterRadius: 250,
-        removeOutsideVisibleBounds: true,
-        spiderifyOnMaxZoom: false,
-        disableClusteringAtZoom: 16
-      });
-      //creating an array of access points
-      //TODO: could we speed this part up? (perhaps by caching query results?)
-      //TODO: would it be a good idea to offload the list itself onto a separate page and fetch that? (perhaps we could utilize browser cache then as well with a last updated parameter?)
-      var apGroups = {};
-      var accessPoints = [{% for ap in filtered_ap_list %}["{{ ap.ssid }}","{{ ap.bssid }}","{{ ap.password }}","{{ ap.wifi_import.added }}","{{ ap.latitude }}","{{ ap.longitude }}","{{ ap.wifi_import.author.marker_color }}","{{ ap.wifi_import.author.user.username }}"],{% endfor %}];
-      //looping through the array and placing markers on the map
-      accessPoints.forEach((entry) => {
-        var marker = L.circleMarker([entry[4], entry[5]]);
-        marker.bindPopup(`<b>SSID:</b> ${entry[0]}<br><b>BSSID:</b> ${entry[1]}<br><b>Password:</b> ${entry[2]}</b><br><b>Added on:</b> ${entry[3]}<br><b>Found by:</b> ${entry[7]}<br><a href="https://wigle.net/search?netid=${entry[1]}">More info...</a>`).openPopup();
-        marker.setStyle({color: `#${entry[6]}`});
-        if(typeof apGroups[entry[7]] === 'undefined')
-          apGroups[entry[7]] = [];
-        apGroups[entry[7]].push(marker);
-        //cluster.addLayer(marker)
-      });
-      //adding the access point cluster onto the map
-      var baseLayers = {
-        "Streets": streets,
-        "Satellite": satellite,
-        "Dark": dark,
-      };
-
-      var overlays = {};
-      for (const apGroup in apGroups) {
-        var mySubGroup = L.featureGroup.subGroup(cluster, apGroups[apGroup]);
-        overlays[apGroup] = mySubGroup;
-        mymap.addLayer(mySubGroup);
-      }
-
-      L.control.layers(baseLayers, overlays).addTo(mymap);
 
       mymap.addLayer(cluster);
+
+      showMapData();
       //geolocation (you are here marker)
       var locationOptions = {
         enableHighAccuracy: true,

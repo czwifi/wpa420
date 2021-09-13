@@ -9,6 +9,7 @@ urlpatterns = [
     path('export/<format>', views.wifi_list_downloadable, name='export_download'),
     path('export/<format>/<additional>', views.wifi_list_downloadable, name='export_download'),
     path('map', views.map, name='map'),
+    path('data/wifi_list_json', views.data_wifi_list_json, name='data_wifi_list_json'),
     path('upload', views.upload_form, name='upload'),
     path('upload_json', views.upload_form_json, name='upload_json'),
     path('api/mobapp/getCollection', views.wifi_list_json, name='api_getCollection'),
