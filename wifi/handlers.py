@@ -45,7 +45,7 @@ def process_import(import_file, wifi_author):
         access_points.append(access_point)
     total = AccessPoint.objects.count()
     to_add = len(access_points)
-    AccessPoint.objects.bulk_create(access_points, ignore_conflicts=True)
+    AccessPoint.objects.bulk_create(access_points, ignore_conflicts=True, batch_size=1000)
     cache.set('data_wifi_list_json', None, None)
     new = AccessPoint.objects.count() - total
     return ImportResults(to_add, new)
