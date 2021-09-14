@@ -50,21 +50,28 @@
         maxClusterRadius: 250,
         removeOutsideVisibleBounds: true,
         spiderifyOnMaxZoom: false,
-        disableClusteringAtZoom: 16
+        disableClusteringAtZoom: 16,
+        chunkedLoading: true
       });
 
       //access points
       $.getJSON('{% url 'data_wifi_list_json' %}', function(accessPoints) {
+        var startTime = Date.now()
+        console.log(startTime)
+
         var apGroups = {};
         accessPoints.forEach((entry) => {
           var marker = L.circleMarker([entry.position[0], entry.position[1]]);
-          marker.bindPopup(`<b>SSID:</b> ${entry.SSID}<br><b>BSSID:</b> ${entry.MAC}<br><b>Password:</b> ${entry.password}</b><br><b>Added on:</b> ${entry.timestamp}<br><b>Found by:</b> ${entry.author}<br><a href="https://wigle.net/search?netid=${entry.MAC}">More info...</a>`).openPopup();
+          marker.bindPopup(`<b>SSID:</b> ${entry.SSID}<br><b>BSSID:</b> ${entry.MAC}<br><b>Password:</b> ${entry.password}</b><br><b>Added on:</b> ${entry.timestamp}<br><b>Found by:</b> ${entry.author}<br><a href="https://wigle.net/search?netid=${entry.MAC}">More info...</a>`)//.openPopup();
           marker.setStyle({color: `#${entry.marker_color}`});
           if(typeof apGroups[entry.author] === 'undefined')
             apGroups[entry.author] = [];
           apGroups[entry.author].push(marker);
           //cluster.addLayer(marker)
         });
+
+        var midTime = Date.now()
+        console.log(midTime - startTime)
 
         //adding the access point cluster onto the map
         var baseLayers = {
@@ -81,6 +88,7 @@
         }
 
         L.control.layers(baseLayers, overlays).addTo(mymap);
+        console.log(`${Date.now() - midTime} (${Date.now() - startTime})`)
       });
 
       //map types
