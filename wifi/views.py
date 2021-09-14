@@ -53,7 +53,9 @@ def upload_form(request):
             if request.user.is_superuser and form.cleaned_data['import_as'] is not None:
                 wifi_author = form.cleaned_data['import_as']
             import_results = process_import(request.FILES['file'], wifi_author)
-            context = {'total': import_results.to_add, 'skipped': import_results.skipped, 'new': import_results.new}
+            if import_results.success == False:
+                return render_generic_error(request, import_results.failure_reason)
+            context = {'total': import_results.to_add, 'skipped': import_results.skipped, 'new': import_results.new, 'additional': import_results.additional}
             return render(request, 'upload_complete.html', context)
         else:
             field_errors = [ (field.label, field.errors) for field in form] 

@@ -5,8 +5,8 @@
   {{ form.file }}
   {% csrf_token %}
   {% if request.user.is_superuser %}
-  <br>{{ form.import_as.label }}: {{ form.import_as }}<br>
+  <br>{{ form.import_as.label }}: {{ form.import_as }}
   {% endif %}
-  <input type="submit" value="Upload" name="submit">
+  <br><input type="submit" value="Upload" name="submit">
 </form>
 {% endblock %}
