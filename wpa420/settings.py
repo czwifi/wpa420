@@ -36,6 +36,8 @@ INTERNAL_IPS = [
     # ...
 ]
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+
 # Application definition
 
 INSTALLED_APPS = [

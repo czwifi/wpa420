@@ -4,6 +4,7 @@ import csv
 import io
 
 from .models import AccessPoint, WifiImport
+from .tasks import start_import_processing
 
 class ImportResults:
     def __init__(self, to_add, new, additional):
@@ -47,6 +48,7 @@ def process_import(import_file, wifi_author):
     to_add = len(access_points)
     AccessPoint.objects.bulk_create(access_points, ignore_conflicts=True, batch_size=1000)
     cache.set('data_wifi_list_json', None, None)
+    start_import_processing.delay(wifi_import.pk) #TODO: make wifi_import serializable and possible to be used directly
     new = AccessPoint.objects.count() - total
     return ImportResults(to_add, new, processed_import.additional)
 
