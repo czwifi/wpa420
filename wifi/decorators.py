@@ -17,8 +17,8 @@ def api_key_required(view_func):
             api_key = WifiUserApiKey.objects.get(key=request.META['HTTP_AUTHORIZATION'])
             api_key.used = datetime.now()
             api_key.save()
-            return view_func(request, *args, **kwargs)
         except:
             return HttpResponse('Unauthorized', status=401)
+        return view_func(request, *args, **kwargs)
 
     return _wrapped_view

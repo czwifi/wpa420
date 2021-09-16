@@ -166,7 +166,9 @@ def api_dbhash(request):
     # since this is only used for validation whether the db needs update
     # we will return the hash of the latest timestamp for now
     # as computing the hash of the entire db would be too costly
-    return HttpResponse(hashlib.md5(AccessPoint.objects.order_by('-added')[0].added.strftime('%Y-%m-%dT%H:%M:%S%z').encode('utf-8')).hexdigest())
+    string = f"{AccessPoint.objects.order_by('-added')[0].added}{AccessPoint.objects.order_by('-location_refreshed')[0].added}"
+    print(string)
+    return HttpResponse(hashlib.md5(string.encode('utf-8')).hexdigest())
 
 @login_required
 def refresh_location(request):
