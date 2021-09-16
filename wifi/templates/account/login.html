@@ -15,22 +15,23 @@
         </div>
         {% endif %}
     {% endif %}
-    <div class="box d-flex">
-        <form method="post" action="{% url 'login' %}">
-        {% csrf_token %}
-        <table>
-        <tr>
-            <td>{{ form.username.label_tag }}</td>
-            <td>{{ form.username }}</td>
-        </tr>
-        <tr>
-            <td>{{ form.password.label_tag }}</td>
-            <td>{{ form.password }}</td>
-        </tr>
-        </table>
-        <button type="submit" class="btn btn-block btn-outline-dark"> Login  </button>
-        <input type="hidden" name="next" value="{{ next }}">
-        </form>
-    </div>
-</div>
+{% endif %}
+
+<form method="post" action="{% url 'login' %}">
+{% csrf_token %}
+<table>
+<tr>
+    <td>{{ form.username.label_tag }}</td>
+    <td>{{ form.username }}</td>
+</tr>
+<tr>
+    <td>{{ form.password.label_tag }}</td>
+    <td>{{ form.password }}</td>
+</tr>
+</table>
+
+<input type="submit" value="login" class="button-primary">
+<input type="hidden" name="next" value="{{ next }}">
+</form>
+
 {% endblock %}
