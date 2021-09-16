@@ -1,16 +1,19 @@
 {% extends "base.html" %}
+<div class="container">
 {% block content %}
+    {% if form.errors %}
+    <p>Your username and password didn't match. Please try again.</p>
+    {% endif %}
 
-{% if form.errors %}
-<p>Your username and password didn't match. Please try again.</p>
-{% endif %}
-
-{% if next %}
-    {% if user.is_authenticated %}
-    <p>Your account doesn't have access to this page. To proceed,
-    please login with an account that has access.</p>
-    {% else %}
-    <p>Please login to see this page.</p>
+    {% if next %}
+        {% if user.is_authenticated %}
+        <p>Your account doesn't have access to this page. To proceed,
+        please login with an account that has access.</p>
+        {% else %}
+        <div class="box style1 error">
+            <p>Please login to see this page.</p>
+        </div>
+        {% endif %}
     {% endif %}
 {% endif %}
 
@@ -27,7 +30,7 @@
 </tr>
 </table>
 
-<input type="submit" value="login">
+<input type="submit" value="login" class="button-primary">
 <input type="hidden" name="next" value="{{ next }}">
 </form>
 

@@ -1,0 +1,29 @@
+/* General styles for default HTML elements */
+* {
+    color: #000000;
+}
+
+body {
+    background-color: #c6ccd8;
+}
+
+/* Styles for custom classes */
+
+.header {
+    background-color: #85a1c1;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    border-radius: 10px;
+}
+
+.menuButton {
+    margin-left: 1rem;
+}
+
+.menuButton a {
+    text-decoration: none;
+}
+
+.menuButton a:visited {
+    color: #000000;
+}
