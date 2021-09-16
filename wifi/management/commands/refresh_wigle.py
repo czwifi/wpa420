@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from requests.auth import HTTPBasicAuth
 import requests
 import json
+import os
 
 class BadWigleApiData(Exception):
     pass
@@ -14,13 +15,10 @@ class TooManyQueriesToday(Exception):
 class Command(BaseCommand):
     help = 'Loads Wigle info for all networks'
 
-    def add_arguments(self, parser):
-        parser.add_argument('wigle_name')
-        parser.add_argument('wigle_key')
-
     def refresh_ap(self, ap, wigle_name, wigle_key):
         wigle_info = requests.get(f'https://api.wigle.net/api/v2/network/detail', params={'netid': ap.bssid.lower()}, auth=HTTPBasicAuth(wigle_name, wigle_key))
-        if wigle_info.status_code != 200:
+        print(wigle_info.text)
+        if wigle_info.status_code != 200 and wigle_info.status_code != 404:
             raise BadWigleApiData
         wigle_info = json.loads(wigle_info.text)
         #print(wigle_info)
@@ -55,6 +53,8 @@ class Command(BaseCommand):
         #print(wigle_info)
 
     def handle(self, *args, **options):
+        wigle_name = os.getenv('WIGLE_NAME','')
+        wigle_key = os.getenv('WIGLE_KEY','')
         ap_list = AccessPoint.objects.filter(wigle_ssid=None, refresh_attempts=0).order_by('location_refreshed')
         for ap in ap_list:
-            self.refresh_ap(ap, options['wigle_name'], options['wigle_key'])
+            self.refresh_ap(ap, wigle_name, wigle_key)
