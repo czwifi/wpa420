@@ -13,7 +13,8 @@ from django.core.cache import cache
 from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey
 from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, CreateWifiUserApiKeyForm, ApiKeyForm
 from .decorators import api_key_required
-from .handlers import process_import, generate_v1_ap_array, render_generic_error, render_json_error, generate_api_key
+from .handlers import generate_v1_ap_array, render_generic_error, render_json_error, generate_api_key
+from .import_processors import process_import
 
 import json
 from requests.auth import HTTPBasicAuth
