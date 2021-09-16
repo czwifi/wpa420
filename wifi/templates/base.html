@@ -1,19 +1,43 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-    	<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>wpa420</title>
-        <link rel="shortcut icon" href="{% static 'favicon.ico' %}"/>
-    </head>
 
-    <body>
-    	{% if user.is_authenticated %}
-        	<p>wpa420 / <a href="{% url 'map' %}">Map</a> / <a href="{% url 'upload' %}">Upload</a> / <a href="{% url 'settings' %}">Settings</a> / <a href="{% url 'logout' %}">Logout</a></p>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>wpa420</title>
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" />
+
+    <link rel="stylesheet" href="{% static 'skeleton.css' %}" />
+    <link rel="stylesheet" href="{% static 'styles.css' %}" />
+</head>
+
+<body>
+    <div class="header">
+        {% if user.is_authenticated %}
+        <p> 
+            wpa420 
+            <a href="{% url 'map' %}">
+                <button class="menuButton">Map</button>
+            </a> 
+            <a href="{% url 'upload' %}">Upload</a>
+            <a href="{% url 'settings' %}">Settings</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </p>
         {% else %}
-        	<p>wpa420 / <a href="{% url 'register' %}">Register</a> / <a href="{% url 'login' %}">Login</a></p>
+            <div class="headerMenuButtons">
+                wpa420
+                <button class="menuButton button">
+                    <a href="{% url 'register' %}">Register</a>
+                </button>
+
+                <button class="menuButton button">
+                    <a href="{% url 'login' %}">Login</a>
+                </button>
+            </div>
         {% endif %}
-        {% block content %}{% endblock content %}
-    </body>
+    </div>
+    {% block content %}{% endblock content %}
+</body>
+
 </html>
