@@ -7,3 +7,8 @@ from .models import AccessPoint
 def start_import_processing(wifi_import):
 	ap_list = AccessPoint.objects.filter(wifi_import__pk=wifi_import)
 	process_wigle(ap_list)
+
+@shared_task
+def do_wigle_processing():
+	ap_list = AccessPoint.objects.filter(refresh_attempts=0).order_by('-wifi_import__added')
+	process_wigle(ap_list)

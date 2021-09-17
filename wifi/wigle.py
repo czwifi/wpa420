@@ -1,6 +1,6 @@
 from wifi.models import AccessPoint
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from requests.auth import HTTPBasicAuth
 import requests
 import json
@@ -12,7 +12,18 @@ class BadWigleApiData(Exception):
 class TooManyQueriesToday(Exception):
     pass
 
+class TooManyLocalRequests(Exception):
+    pass
+
+def check_too_many_aps():
+    wigle_limit = int(os.getenv('WIGLE_LIMIT',10))
+    ap_count = AccessPoint.objects.filter(location_refreshed__gte= datetime.now() - timedelta(hours = 24)).count()
+    if ap_count > wigle_limit:
+        raise TooManyLocalRequests
+
 def refresh_ap(ap, wigle_name, wigle_key):
+    check_too_many_aps()
+
     wigle_info = requests.get(f'https://api.wigle.net/api/v2/network/detail', params={'netid': ap.bssid.lower()}, auth=HTTPBasicAuth(wigle_name, wigle_key))
     print(wigle_info.text)
     if wigle_info.status_code != 200 and wigle_info.status_code != 404:
