@@ -10,5 +10,5 @@ def start_import_processing(wifi_import):
 
 @shared_task
 def do_wigle_processing():
-	ap_list = AccessPoint.objects.filter(refresh_attempts=0).order_by('-wifi_import__added')
+	ap_list = AccessPoint.objects.filter(wigle_ssid=None, refresh_attempts=0).order_by('-wifi_import__added')
 	process_wigle(ap_list)
