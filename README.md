@@ -9,5 +9,6 @@ TODO: summary of what this is
 4. `python3 manage.py makemigrations wifi && python3 manage.py migrate && python3 manage.py collectstatic --no-input`
 5. `python3 manage.py createsuperuser`
 6. Set up a web server (for example gunicorn or you can temporarily use the built in one)
-7. Log into the admin interface (/admin) and create any additional standard accounts you might need. Also create a WifiUser for yourself and any of these users.
-8. Potentially import any JSON backups you have at /uploadJson
+7. Set up celery (worker and beat)
+8. Log into the admin interface (/admin) and create any additional standard accounts you might need. Also create a WifiUser for yourself and any of these users.
+9. Potentially import any JSON backups you have at /uploadJson

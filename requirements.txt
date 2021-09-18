@@ -9,11 +9,15 @@ click-didyoumean==0.0.3
 click-plugins==1.1.1
 click-repl==0.2.0
 Django==3.2.5
+django-celery-beat==2.2.1
 django-debug-toolbar==3.2.1
+django-timezone-field==4.2.1
 idna==2.10
 kombu==5.1.0
 mysqlclient==2.0.3
 prompt-toolkit==3.0.20
+python-crontab==2.5.1
+python-dateutil==2.8.2
 python-dotenv==0.18.0
 pytz==2021.1
 redis==3.5.3
