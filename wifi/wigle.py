@@ -42,7 +42,7 @@ def refresh_ap(ap, wigle_name, wigle_key):
         ap.channel = ap_info['channel']
         ap.city = ap_info['city']
         ap.country = ap_info['country']
-        ap.encryption = None if ap_info['encryption'] == 'Unknown' else ap_info['encryption']
+        ap.encryption = None if ap_info['encryption'] == 'unknown' else ap_info['encryption']
         ap.wigle_firsttime = ap_info['firsttime']
         ap.housenumber = ap_info['housenumber']
         ap.wigle_lasttime = ap_info['lasttime']
