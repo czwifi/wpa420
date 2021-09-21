@@ -15,8 +15,11 @@ class TooManyQueriesToday(Exception):
 class TooManyLocalRequests(Exception):
     pass
 
+def get_wigle_limit():
+    return int(os.getenv('WIGLE_LIMIT',10))
+
 def check_too_many_aps():
-    wigle_limit = int(os.getenv('WIGLE_LIMIT',10))
+    wigle_limit = get_wigle_limit()
     ap_count = AccessPoint.objects.filter(location_refreshed__gte= datetime.now() - timedelta(hours = 24)).count()
     if ap_count > wigle_limit:
         raise TooManyLocalRequests
@@ -25,11 +28,9 @@ def refresh_ap(ap, wigle_name, wigle_key):
     check_too_many_aps()
 
     wigle_info = requests.get(f'https://api.wigle.net/api/v2/network/detail', params={'netid': ap.bssid.lower()}, auth=HTTPBasicAuth(wigle_name, wigle_key))
-    print(wigle_info.text)
     if wigle_info.status_code != 200 and wigle_info.status_code != 404:
         raise BadWigleApiData
     wigle_info = json.loads(wigle_info.text)
-    #print(wigle_info)
     if wigle_info['success'] is False and wigle_info['message'] == 'too many queries today.':
         raise TooManyQueriesToday
     ap.location_refreshed = datetime.now()
