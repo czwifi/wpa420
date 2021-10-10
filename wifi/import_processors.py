@@ -4,7 +4,7 @@ import csv
 import io
 
 from .models import AccessPoint, WifiImport
-from .tasks import start_import_processing
+from .tasks import start_import_processing, assign_wps
 
 class ImportResults:
     def __init__(self, to_add, new, additional):
@@ -56,6 +56,7 @@ def process_oneshot_import(import_file, wifi_import):
     access_points = []
     with io.TextIOWrapper(import_file, encoding='utf-8') as text_file:
         reader = csv.DictReader(text_file, delimiter=';')
+        wps_keys = {}
 
         for networkInfo in reader:
             access_point = AccessPoint(
@@ -70,7 +71,9 @@ def process_oneshot_import(import_file, wifi_import):
                 wifi_import = wifi_import
             )
             access_points.append(access_point)
+            wps_keys[networkInfo['BSSID']] = networkInfo['WPS PIN']
 
+    assign_wps.delay(wps_keys)
     return ProcessedImport(access_points, "")
 
 #TODO: handle semicolons in ssids?

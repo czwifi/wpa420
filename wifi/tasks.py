@@ -3,6 +3,7 @@ from celery import shared_task
 from .wigle import process_wigle, get_wigle_limit
 from .models import AccessPoint
 
+
 @shared_task
 def start_import_processing(wifi_import):
 	ap_list = AccessPoint.objects.filter(wifi_import__pk=wifi_import)
@@ -16,3 +17,14 @@ def do_wigle_processing():
 	process_wigle(ap_list_old)
 	ap_list_new = ap_list.order_by('-wifi_import__added')[:processed_count]
 	process_wigle(ap_list_new)
+
+@shared_task
+def assign_wps(wps_keys):
+	for bssid in wps_keys:
+		try:
+			ap = AccessPoint.objects.get(bssid=bssid)
+			ap.wps_enabled = True
+			ap.wps = wps_keys[bssid]
+			ap.save()
+		except:
+			pass
