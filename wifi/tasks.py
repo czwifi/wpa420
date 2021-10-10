@@ -1,5 +1,5 @@
 from celery import shared_task
-#from demoapp.models import Widget
+
 from .handlers import generate_wifi_list_json
 from .wigle import process_wigle, get_wigle_limit
 from .models import AccessPoint
