@@ -1,5 +1,6 @@
 from celery import shared_task
 #from demoapp.models import Widget
+from .handlers import generate_wifi_list_json
 from .wigle import process_wigle, get_wigle_limit
 from .models import AccessPoint
 
@@ -7,16 +8,24 @@ from .models import AccessPoint
 @shared_task
 def start_import_processing(wifi_import):
 	ap_list = AccessPoint.objects.filter(wifi_import__pk=wifi_import)
-	process_wigle(ap_list)
+	try:
+		process_wigle(ap_list)
+	except:
+		pass
+	generate_wifi_list_json()
 
 @shared_task
 def do_wigle_processing():
 	processed_count = get_wigle_limit() / 2
 	ap_list = AccessPoint.objects.filter(wigle_ssid=None, refresh_attempts=0)
-	ap_list_old = ap_list.order_by('wifi_import__added')[:processed_count]
-	process_wigle(ap_list_old)
-	ap_list_new = ap_list.order_by('-wifi_import__added')[:processed_count]
-	process_wigle(ap_list_new)
+	try:
+		ap_list_old = ap_list.order_by('wifi_import__added')[:processed_count]
+		process_wigle(ap_list_old)
+		ap_list_new = ap_list.order_by('-wifi_import__added')[:processed_count]
+		process_wigle(ap_list_new)
+	except:
+		pass
+	generate_wifi_list_json()
 
 @shared_task
 def assign_wps(wps_keys):
@@ -28,3 +37,4 @@ def assign_wps(wps_keys):
 			ap.save()
 		except:
 			pass
+	generate_wifi_list_json()

@@ -13,7 +13,7 @@ from django.core.cache import cache
 from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey
 from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, CreateWifiUserApiKeyForm, ApiKeyForm
 from .decorators import api_key_required
-from .handlers import generate_v1_ap_array, render_generic_error, render_json_error, generate_api_key
+from .handlers import generate_v1_ap_array, render_generic_error, render_json_error, generate_api_key, generate_wifi_list_json
 from .import_processors import process_import
 
 import json
@@ -121,10 +121,7 @@ def data_wifi_list_json(request):
     response = cache.get('data_wifi_list_json')
     if response is not None:
         return response
-    ap_list = AccessPoint.objects.exclude(latitude=None).prefetch_related('wifi_import__author__user')
-    networks = generate_v1_ap_array(ap_list)
-    response = JsonResponse(networks, safe=False)
-    cache.set('data_wifi_list_json', response, None)
+    response = generate_wifi_list_json()
     return response
 
 @csrf_exempt

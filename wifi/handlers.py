@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.utils.crypto import get_random_string
+from django.core.cache import cache
 
 from datetime import datetime
 
-from .models import WifiUserApiKey
+from .models import WifiUserApiKey, AccessPoint
 
 def generate_v1_ap_array(ap_list):
     networks = []
@@ -29,6 +30,13 @@ def generate_v1_ap_array(ap_list):
         networks.append(network)
     print(datetime.now())
     return networks
+
+def generate_wifi_list_json():
+    ap_list = AccessPoint.objects.exclude(latitude=None).prefetch_related('wifi_import__author__user')
+    networks = generate_v1_ap_array(ap_list)
+    response = JsonResponse(networks, safe=False)
+    cache.set('data_wifi_list_json', response, None)
+    return response
 
 
 def generate_api_key(wifi_user, description):
