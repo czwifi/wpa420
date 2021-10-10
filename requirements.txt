@@ -11,6 +11,7 @@ click-repl==0.2.0
 Django==3.2.5
 django-celery-beat==2.2.1
 django-debug-toolbar==3.2.1
+django-redis==5.0.0
 django-timezone-field==4.2.1
 idna==2.10
 kombu==5.1.0
