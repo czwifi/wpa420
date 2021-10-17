@@ -24,8 +24,9 @@ def check_too_many_aps():
     if ap_count > wigle_limit:
         raise TooManyLocalRequests
 
-def refresh_ap(ap, wigle_name, wigle_key):
-    check_too_many_aps()
+def refresh_ap(ap, wigle_name, wigle_key, bypass_limit=False):
+    if not bypass_limit:
+        check_too_many_aps()
 
     wigle_info = requests.get(f'https://api.wigle.net/api/v2/network/detail', params={'netid': ap.bssid.lower()}, auth=HTTPBasicAuth(wigle_name, wigle_key))
     if wigle_info.status_code != 200 and wigle_info.status_code != 404:
@@ -60,10 +61,10 @@ def refresh_ap(ap, wigle_name, wigle_key):
     ap.save()
     print(f"{ap.bssid}")
 
-def process_wigle(ap_list):
+def process_wigle(ap_list, bypass_limit=False):
     wigle_name = os.getenv('WIGLE_NAME','')
     wigle_key = os.getenv('WIGLE_KEY','')
     if wigle_name == '' or wigle_key == '':
         return
     for ap in ap_list:
-        refresh_ap(ap, wigle_name, wigle_key)
+        refresh_ap(ap, wigle_name, wigle_key, bypass_limit)

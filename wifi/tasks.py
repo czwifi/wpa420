@@ -20,9 +20,9 @@ def do_wigle_processing():
 	ap_list = AccessPoint.objects.filter(wigle_ssid=None, refresh_attempts=0)
 	try:
 		ap_list_old = ap_list.order_by('wifi_import__added')[:processed_count]
-		process_wigle(ap_list_old)
+		process_wigle(ap_list_old, True)
 		ap_list_new = ap_list.order_by('-wifi_import__added')[:processed_count]
-		process_wigle(ap_list_new)
+		process_wigle(ap_list_new, True)
 	except:
 		pass
 	generate_wifi_list_json()
