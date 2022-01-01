@@ -66,6 +66,15 @@ def upload_form(request):
         context = {'form': form}
         return render(request, 'upload.html', context)
 
+@csrf_exempt
+@api_key_required
+def api_upload(request):
+    wifi_author = WifiUserApiKey.objects.get(key=request.META['HTTP_AUTHORIZATION']).wifi_user
+    import_results = process_import(request.FILES['file'], wifi_author)
+    if import_results.success == False:
+        return JsonResponse({'success': False})
+    return JsonResponse({'success': import_results.success, 'total': import_results.to_add, 'skipped': import_results.skipped, 'new': import_results.new, 'additional': import_results.additional})
+
 @login_required
 @user_passes_test(lambda u: u.is_superuser)
 def upload_form_json(request):
