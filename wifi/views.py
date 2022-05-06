@@ -15,6 +15,7 @@ from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, Create
 from .decorators import api_key_required
 from .handlers import generate_v1_ap_array, render_generic_error, render_json_error, generate_api_key, generate_wifi_list_json
 from .import_processors import process_import
+from .tasks import do_wigle_processing
 
 import json
 from requests.auth import HTTPBasicAuth
@@ -178,37 +179,8 @@ def api_dbhash(request):
 
 @login_required
 def refresh_location(request):
-    form = WigleForm(request.POST, request.FILES)
-    context = {'form': form}
-    if request.method == 'POST':
-        if form.is_valid():
-            attempts = updates = 0
-            ap_list = AccessPoint.objects.filter(author=WifiUser.objects.get(user=request.user), latitude=None, longitude=None).order_by('location_refreshed')
-            for ap in ap_list:
-                wigle_info = requests.get(f'https://api.wigle.net/api/v2/network/detail', params={'netid': ap.bssid.lower()}, auth=HTTPBasicAuth(form.cleaned_data['wigle_name'], form.cleaned_data['wigle_key']))
-                if wigle_info.status_code != 200:
-                    return render_generic_error(request, "bad wigle api data")
-                wigle_info = json.loads(wigle_info.text)
-                print(wigle_info)
-                if wigle_info['success'] is False and wigle_info['message'] == 'too many queries today.':
-                    break
-                ap.location_refreshed = datetime.now()
-                attempts += 1
-                if wigle_info['success'] is True:
-                    ap.latitude = wigle_info['results'][0]['trilat']
-                    ap.longitude = wigle_info['results'][0]['trilong']
-                    updates += 1
-                ap.save()
-                print(wigle_info)
-            context = {
-                'attempts': attempts,
-                'updates': updates,
-            }
-            return render(request, 'my_imports/refresh_complete.html', context)
-        else:
-            return render_generic_error(request, "something went wrong")
-    else:
-        return render(request, 'my_imports/refresh.html', context)
+    do_wigle_processing.delay()
+    return HttpResponse("refreshing scheduled")
 
 @login_required
 def generate_invite(request):
