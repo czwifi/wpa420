@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<table border="1em">
+  <tr>
+    <th>Date</th><th>Uploader</th><th>Networks</th>
+  {% for import in imports %}
+  <tr>
+  	<td>{{ import.added }}</td>
+    <td>{{ import.author }}</td>
+    <td>{{ import.count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

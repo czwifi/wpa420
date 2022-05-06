@@ -26,4 +26,5 @@ urlpatterns = [
     path('account/settings/api_keys/new', views.create_api_key, name='create_api_key'),
     path('account/settings/api_keys/delete/<key_id>',views.delete_api_key,name='delete_api_key'),
     path('my_imports/refresh_location', views.refresh_location, name='refresh_location'),
+    path('imports', views.import_history, name='imports'),
 ]

@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 
 
-from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey
+from .models import AccessPoint, WifiUser, WifiUserInvite, WifiUserApiKey, WifiImport
 from .forms import UploadFileForm, WigleForm, RegisterForm, SettingsForm, CreateWifiUserApiKeyForm, ApiKeyForm
 from .decorators import api_key_required
 from .handlers import generate_v1_ap_array, render_generic_error, render_json_error, generate_api_key, generate_wifi_list_json
@@ -324,3 +324,12 @@ def delete_api_key(request, key_id=None):
         return redirect('api_keys')
     except:
         return render_generic_error(request, "the key probably doesn't exist")
+
+@login_required
+def import_history(request):
+    wifi_user = WifiUser.objects.get(user=request.user)
+    imports = WifiImport.objects.all().prefetch_related('author__user').annotate(count=Count('accesspoint')).order_by('-added')
+    context = {
+        'imports': imports
+    }
+    return render(request, 'imports.html', context)
