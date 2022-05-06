@@ -300,7 +300,7 @@ def delete_api_key(request, key_id=None):
 @login_required
 def import_history(request):
     wifi_user = WifiUser.objects.get(user=request.user)
-    imports = WifiImport.objects.all().prefetch_related('author__user').annotate(count=Count('accesspoint')).order_by('-added')
+    imports = WifiImport.objects.all().prefetch_related('author__user').annotate(count=Count('accesspoint')).order_by('-added').exclude(count=0)
     context = {
         'imports': imports
     }
