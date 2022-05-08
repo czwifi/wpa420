@@ -10,7 +10,7 @@ def start_import_processing(wifi_import):
 	ap_list = AccessPoint.objects.filter(wifi_import__pk=wifi_import)
 	try:
 		process_wigle(ap_list)
-	except as e:
+	except Exception as e:
 		print(e)
 	generate_wifi_list_json()
 
@@ -23,7 +23,7 @@ def do_wigle_processing():
 		process_wigle(ap_list_old, True)
 		ap_list_new = ap_list.order_by('-wifi_import__added')[:processed_count]
 		process_wigle(ap_list_new, True)
-	except as e:
+	except Exception as e:
 		print(e)
 	generate_wifi_list_json()
 
@@ -35,6 +35,6 @@ def assign_wps(wps_keys):
 			ap.wps_enabled = True
 			ap.wps = wps_keys[bssid]
 			ap.save()
-		except as e:
+		except Exception as e:
 			print(e)
 	generate_wifi_list_json()
