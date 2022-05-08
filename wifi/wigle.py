@@ -58,6 +58,10 @@ def refresh_ap(ap, wigle_name, wigle_key, bypass_limit=False):
         ap.wigle_type = ap_info['type']
         if ap.frequency == None:
             ap.frequency = AccessPoint.Frequency.FREQ_2_4G if ap.channel <= 14 else AccessPoint.Frequency.FREQ_5G
+    elif ap.wifi_import.delete_unlocateable:
+        ap.delete()
+        print(f"Deleting {ap.bssid}")
+        return
     ap.save()
     print(f"{ap.bssid}")
 

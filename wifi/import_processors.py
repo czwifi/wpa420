@@ -24,7 +24,7 @@ class ProcessedImport:
         self.access_points = access_points
         self.additional = additional
 
-def process_import(import_file, wifi_author):
+def process_import(import_file, wifi_author, delete_unlocateable):
     lines = import_file.readlines()
     first_line = decode_line(lines[0])
     import_file.seek(0)
@@ -32,7 +32,7 @@ def process_import(import_file, wifi_author):
     if first_line is False:
         return ImportFailure("Provided import file is not a valid text file.")
 
-    wifi_import = WifiImport(author=wifi_author)
+    wifi_import = WifiImport(author=wifi_author, delete_unlocateable=delete_unlocateable)
     wifi_import.save()
 
     if '"Date";"BSSID";"ESSID";"WPS PIN";"WPA PSK"' in first_line:

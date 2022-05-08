@@ -68,6 +68,8 @@ class WifiImport(models.Model):
 	)
 
 	added = models.DateTimeField('date added', default=datetime.now)
+	delete_unlocateable = models.BooleanField(default=False)
+
 	def __str__(self):
 		return f"{self.author} - {self.added}"
     

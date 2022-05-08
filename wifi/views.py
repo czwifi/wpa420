@@ -54,7 +54,7 @@ def upload_form(request):
         if form.is_valid():
             if request.user.is_superuser and form.cleaned_data['import_as'] is not None:
                 wifi_author = form.cleaned_data['import_as']
-            import_results = process_import(request.FILES['file'], wifi_author)
+            import_results = process_import(request.FILES['file'], wifi_author, form.cleaned_data['delete_unlocateable'])
             if import_results.success == False:
                 return render_generic_error(request, import_results.failure_reason)
             context = {'total': import_results.to_add, 'skipped': import_results.skipped, 'new': import_results.new, 'additional': import_results.additional}
