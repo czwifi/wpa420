@@ -94,7 +94,7 @@ class AccessPoint(models.Model):
 	longitude = models.DecimalField(max_digits=11, decimal_places=8, null=True, blank=True, db_index=True)
 	password = models.CharField(max_length=63)
 	location_refreshed = models.DateTimeField('date location refreshed', blank=True, null=True)
-	refresh_attempts = models.IntegerField(default=0)
+	refresh_attempts = models.IntegerField(default=0, db_index=True)
 	frequency = models.CharField(
 		max_length=4, 
 		null=True, blank=True,
