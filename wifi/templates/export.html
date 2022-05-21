@@ -1,15 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-<table border="1em">
-  <tr>
-    <th>Export format</th><th></th><th></th>
-  </tr>
-  <tr>
-  	<td>JSON v1</td>
-  	<td><a href="{% url 'export_download' 'jsonv1' %}">All access points</a></td>
-    <td><a href="{% url 'export_download' 'jsonv1' 'mine' %}">Only mine</a></td>
-  </tr>
-</table>
+<div class="container-sm mt-2">
+	<div class="col" style="max-width: 540px">
+		<div class="card">
+			<div class="card-body">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<th>Export format</th><th></th><th></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>JSON v1</td>
+							<td><a href="{% url 'export_download' 'jsonv1' %}">All access points</a></td>
+						<td><a href="{% url 'export_download' 'jsonv1' 'mine' %}">Only mine</a></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
 {% endblock %}

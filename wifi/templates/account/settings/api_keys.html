@@ -1,19 +1,29 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p><a href="{% url 'settings' %}"> &lt;&lt; Settings</a></p>
 
-<a href="{% url 'create_api_key' %}">New key</a>
-<table border="1em">
-  <tr>
-    <th>Key Description</th><th>Created</th><th>Last Used</th><th></th>
-  {% for key in key_list %}
-  <tr>
-  	<td>{{ key.description }}</td>
-    <td>{{ key.created }}</td>
-    <td>{{ key.used }}</td>
-  	<td><a href="{% url 'delete_api_key' key.pk %}" onclick="return confirm('Are you sure you want to delete {{ key.description }}?')">Delete</a></td>
-  </tr>
-  {% endfor %}
-</table>
+<div class="container-sm mt-2">
+  <p><a href="{% url 'settings' %}"> &lt;&lt; Settings</a></p>
+
+  <a href="{% url 'create_api_key' %}">New key</a>
+  <div class="card mt-2">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Key Description</th><th>Created</th><th>Last Used</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for key in key_list %}
+        <tr>
+        	<td>{{ key.description }}</td>
+          <td>{{ key.created }}</td>
+          <td>{{ key.used }}</td>
+        	<td><a href="{% url 'delete_api_key' key.pk %}" onclick="return confirm('Are you sure you want to delete {{ key.description }}?')">Delete</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

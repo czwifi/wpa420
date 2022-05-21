@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% block content %}
-<p>Total access points: {{ total }}<br>
-Skipped: {{ skipped }}<br>
-New access points: {{ new }}</p>
-<p><span style="font-family: monospace;">{{ additional }}</span></p>
+<div class="container-sm mt-2">
+	<div class="col-6">
+		<p>Total access points: {{ total }}<br>
+		Skipped: {{ skipped }}<br>
+		New access points: {{ new }}</p>
+		<p><span style="font-family: monospace;">{{ additional }}</span></p>
+	</div>
+</div>
 {% endblock %}

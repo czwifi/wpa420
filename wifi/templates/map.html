@@ -20,26 +20,73 @@
        L_PREFER_CANVAS = true; // experimental
    </script>
 
-	<p>Total networks: {{ ap_count }} // {{ filtered_ap_count }} geolocated ({% widthratio filtered_ap_count ap_count 100 %}%) // {{ unprocessed_ap_count }} unprocessed ({% widthratio unprocessed_ap_count ap_count 100 %}%) // <a href="#" onclick="toggleLocation(); return false;">Toggle location marker</a> // <a href="#" onclick="centerMapLocation(); return false;">Move map to my location</a></p>
+<div class="container-fluid mt-2">
+  <p>Total networks: {{ ap_count }} // {{ filtered_ap_count }} geolocated ({% widthratio filtered_ap_count ap_count 100 %}%) // {{ unprocessed_ap_count }} unprocessed ({% widthratio unprocessed_ap_count ap_count 100 %}%) // <a href="#" onclick="toggleLocation(); return false;">Toggle location marker</a> // <a href="#" onclick="centerMapLocation(); return false;">Move map to my location</a></p>
+
+	
 
 	<div id="mapid"></div>
 
-   <p>Leaderboards:</p>
-   <ul>
-   	{% for user in leaderboards %}
-   	<li>{{ user.user }}: {{ user.wifiimport__accesspoint__count }} ({% widthratio user.wifiimport__accesspoint__count ap_count 100 %}%)</li>
-   	{% endfor %}
-   </ul>
-   <p>Providers:</p>
-   <ul>
-   	{% for provider in provider_list %}
-   	<li>{{ provider.provider }}: {{ provider.ap_count }}</li>
-   	{% endfor %}
-   </ul>
-   <p>Other:</p>
-   <ul>
-    <li><a href="{% url 'export' %}">Export data</a></li>
-  </ul>
+</div>
+<div class="container mt-2">
+
+
+<div class="row">
+  <div class="col mb-3">
+    <div class="card">
+      <div class="card-header lead">
+        Leaderboards
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <tbody>
+            {% for user in leaderboards %}
+              <tr>
+                <td>{{ user.user }}</td>
+                <td>{{ user.wifiimport__accesspoint__count }} ({% widthratio user.wifiimport__accesspoint__count ap_count 100 %}%)</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col mb-3">
+    <div class="card">
+      <div class="card-header lead">
+        Providers
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <tbody>
+            {% for provider in provider_list %}
+            <tr>
+              <td>{{ provider.provider }}</td>
+              <td>{{ provider.ap_count }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col mb-3">
+    <div class="card">
+      <div class="card-header lead">
+        Other
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <tbody>
+            <tr>
+              <td><a href="{% url 'export' %}">Export data</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
     <script type="text/javascript">
       //map creation
@@ -168,5 +215,5 @@
         }
       }
    </script>
-
+</div>
 {% endblock %}

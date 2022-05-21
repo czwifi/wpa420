@@ -1,13 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
-<form method="post" enctype="multipart/form-data">
-  Select import:
-  {{ form.file }}
-  {% csrf_token %}
-  {% if request.user.is_superuser %}
-  <br>{{ form.import_as.label }}: {{ form.import_as }}
-  {% endif %}
-  <br>{{ form.delete_unlocateable }} {{ form.delete_unlocateable.label }}
-  <br><input type="submit" value="Upload" name="submit">
-</form>
+<div class="container-sm mt-2">
+	<div style="max-width: 540px">
+		<div class="card">
+			<div class="card-body">
+				<form method="post" enctype="multipart/form-data" class="gy-2 gx-3 align-items-center">
+					<table class="table table-borderless">
+						<tbody>
+							<tr>
+								<td>
+					    			<label for="file" class="form-label">Select Import</label>
+					    		</td>
+					    		<td>
+					    			<input class="form-control" type="file" id="file" name="file">
+					    		</td>
+					    	</tr>
+							{% csrf_token %}
+							{% if request.user.is_superuser %}
+							<tr>
+								<td>
+									{{ form.import_as.label }}
+								</td>
+								<td>
+									{{ form.import_as }}
+								</td>
+							</tr>
+							{% endif %}
+							<tr>
+								<td colspan="2">
+									<div class="form-check form-check-inline">
+										<input type="checkbox" class="form-check-input" name="delete_unlocateable" id="delete_unlocateable">
+										<label class="form-check-label" for="delete_unlocateable">Delete networks with no geolocation data</label>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<button type="submit" class="btn btn-primary">Upload</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
 {% endblock %}

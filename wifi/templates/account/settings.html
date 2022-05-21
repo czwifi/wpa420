@@ -9,27 +9,29 @@
   <p>Settings have been updated succesfully.</p>
 {% endif %}
 
-<form method="post">
-  <table>
-  <tr>
-  	<td>{{ form.username.label_tag }}</td>
-  	<td>{{ form.username }}</td>
-  </tr>
-  <tr>
-  	<td>{{ form.email.label_tag }}</td>
-  	<td>{{ form.email }}</td>
-  </tr>
-  <tr>
-  	<td>{{ form.marker_color.label_tag }}</td>
-  	<td>{{ form.marker_color }}</td>
-  </tr>
-</table>
-  {% csrf_token %}
-  <input type="submit" value="Change" name="submit">
-</form>
-<ul>
-  <li><a href="{% url 'change_password' %}">Change Password</a></li>
-  <li><a href="{% url 'generate_invite' %}">Generate Invite Code</a></li>
-  <li><a href="{% url 'api_keys' %}">Manage API keys</a></li>
-</ul>
+<div class="container-sm mt-2">
+  <form method="post">
+    <table>
+    <tr>
+    	<td>{{ form.username.label_tag }}</td>
+    	<td>{{ form.username }}</td>
+    </tr>
+    <tr>
+    	<td>{{ form.email.label_tag }}</td>
+    	<td>{{ form.email }}</td>
+    </tr>
+    <tr>
+    	<td>{{ form.marker_color.label_tag }}</td>
+    	<td>{{ form.marker_color }}</td>
+    </tr>
+  </table>
+    {% csrf_token %}
+    <input type="submit" value="Change" name="submit">
+  </form>
+  <ul>
+    <li><a href="{% url 'change_password' %}">Change Password</a></li>
+    <li><a href="{% url 'generate_invite' %}">Generate Invite Code</a></li>
+    <li><a href="{% url 'api_keys' %}">Manage API keys</a></li>
+  </ul>
+</div>
 {% endblock %}
