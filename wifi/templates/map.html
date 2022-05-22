@@ -256,7 +256,7 @@
         $('#networkCount').html(accessPoints.length)
 
         accessPoints.forEach((entry) => {
-          if(refreshMap) {
+          if(refreshMap && entry.position[0] != "null") {
             var marker = L.circleMarker([entry.position[0], entry.position[1]]);
             marker.bindPopup(`<b>SSID:</b> ${entry.SSID}<br><b>BSSID:</b> ${entry.MAC}<br><b>Password:</b> ${entry.password}</b><br><b>Added on:</b> ${entry.timestamp}<br><b>Found by:</b> ${entry.author}<br><a href="https://wigle.net/search?netid=${entry.MAC}">More info...</a>`)//.openPopup();
             marker.setStyle({color: `#${entry.marker_color}`});

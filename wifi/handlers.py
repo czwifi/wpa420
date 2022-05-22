@@ -32,7 +32,7 @@ def generate_v1_ap_array(ap_list):
     return networks
 
 def generate_wifi_list_json():
-    ap_list = AccessPoint.objects.exclude(latitude=None).prefetch_related('wifi_import__author__user')
+    ap_list = AccessPoint.objects.prefetch_related('wifi_import__author__user')
     networks = generate_v1_ap_array(ap_list)
     response = JsonResponse(networks, safe=False)
     cache.set('data_wifi_list_json', response, None)
