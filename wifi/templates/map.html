@@ -186,7 +186,7 @@
       }
 
       //TODO: fix the performance of this
-      //searchInput.addEventListener('input', inputHandler);
+      searchInput.addEventListener('input', inputHandler);
 
       function onInitialLocationSuccess(pos) {
         coords = pos.coords
@@ -251,6 +251,9 @@
 
         var apGroups = {};
         var tableString = "";
+        var tableCount = 0;
+        //if(!refreshMap) accessPoints = accessPoints.slice(0, 100);
+
         accessPoints.forEach((entry) => {
           if(refreshMap) {
             var marker = L.circleMarker([entry.position[0], entry.position[1]]);
@@ -261,13 +264,17 @@
             apGroups[entry.author].push(marker);
           }
 
-          tableString += `<tr><td><b>${entry.SSID}</b> (${entry.MAC})<br>${entry.password}</td></tr>`;
+          if(tableCount < 100) tableString += `<tr><td><b>${entry.SSID}</b> (${entry.MAC})<br>${entry.password}</td></tr>`;
+          tableCount++;
         });
 
+        if(tableCount >= 100) tableString += `<tr><td>Too many results...</td></tr>`;
+
+        console.log(`array built ${Date.now() - startTime}`)
         $('#networkList').append(tableString);
 
         var midTime = Date.now()
-        console.log(`array built ${midTime - startTime}`)
+        console.log(`Table append ${midTime - startTime}`)
 
         //exit the function if we're not refreshing the map
         if(!refreshMap) return;
