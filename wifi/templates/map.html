@@ -15,6 +15,13 @@
    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script> 
    <style>
    	#mapid { height: 700px; }
+    .scrollable {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+    .card-fixedsize {
+      height: 500px;
+    }
    </style>
    <script>
        L_PREFER_CANVAS = true; // experimental
@@ -28,7 +35,7 @@
 	<div id="mapid"></div>
 
 </div>
-<div class="container mt-2">
+<div class="container mt-3">
 
 
 <div class="row">
@@ -37,7 +44,7 @@
       <div class="card-header lead">
         Leaderboards
       </div>
-      <div class="card-body">
+      <div class="card-body card-fixedsize">
         <table class="table">
           <tbody>
             {% for user in leaderboards %}
@@ -56,7 +63,7 @@
       <div class="card-header lead">
         Providers
       </div>
-      <div class="card-body">
+      <div class="card-body card-fixedsize">
         <table class="table">
           <tbody>
             {% for provider in provider_list %}
@@ -73,14 +80,25 @@
   <div class="col mb-3">
     <div class="card">
       <div class="card-header lead">
-        Other
+        Networks
       </div>
-      <div class="card-body">
-        <table class="table">
-          <tbody>
+      <div class="card-body scrollable">
+        <table class="table" id="networkTable">
+          <thead>
             <tr>
               <td><a href="{% url 'export' %}">Export data</a></td>
             </tr>
+            <tr>
+              <div class="row">
+                <div class="col-auto">
+                  <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="searchInput">
+                </div>
+                <div class="col-auto">
+                  <button type="button" class="btn btn-primary" onclick="onFilterPress()">Filter</button>
+                </div>
+            </tr>
+          </thead>
+          <tbody id="networkList">
           </tbody>
         </table>
       </div>
@@ -91,6 +109,8 @@
     <script type="text/javascript">
       //map creation
       var mymap = L.map('mapid').setView([50.0755, 14.4378], 13);
+      var markerLayers = [];
+      var layerControl;
 
       //grouping access points
       var cluster = L.markerClusterGroup({
@@ -102,40 +122,12 @@
       });
 
       //access points
+      var allAccessPoints;
+
       $.getJSON('{% url 'data_wifi_list_json' %}', function(accessPoints) {
-        var startTime = Date.now()
-        console.log(startTime)
+        allAccessPoints = accessPoints;
 
-        var apGroups = {};
-        accessPoints.forEach((entry) => {
-          var marker = L.circleMarker([entry.position[0], entry.position[1]]);
-          marker.bindPopup(`<b>SSID:</b> ${entry.SSID}<br><b>BSSID:</b> ${entry.MAC}<br><b>Password:</b> ${entry.password}</b><br><b>Added on:</b> ${entry.timestamp}<br><b>Found by:</b> ${entry.author}<br><a href="https://wigle.net/search?netid=${entry.MAC}">More info...</a>`)//.openPopup();
-          marker.setStyle({color: `#${entry.marker_color}`});
-          if(typeof apGroups[entry.author] === 'undefined')
-            apGroups[entry.author] = [];
-          apGroups[entry.author].push(marker);
-          //cluster.addLayer(marker)
-        });
-
-        var midTime = Date.now()
-        console.log(midTime - startTime)
-
-        //adding the access point cluster onto the map
-        var baseLayers = {
-          "Streets": streets,
-          "Satellite": satellite,
-          "Dark": dark,
-        };
-
-        var overlays = {};
-        for (const apGroup in apGroups) {
-          var mySubGroup = L.featureGroup.subGroup(cluster, apGroups[apGroup]);
-          overlays[apGroup] = mySubGroup;
-          mymap.addLayer(mySubGroup);
-        }
-
-        L.control.layers(baseLayers, overlays).addTo(mymap);
-        console.log(`${Date.now() - midTime} (${Date.now() - startTime})`)
+        loadAPList(accessPoints, true);
       });
 
       //map types
@@ -163,6 +155,14 @@
 
       mymap.addLayer(cluster);
 
+      var baseLayers = {
+        "Streets": streets,
+        "Satellite": satellite,
+        "Dark": dark,
+      };
+      var layerControl = L.control.layers(baseLayers, {});
+      layerControl.addTo(mymap);
+
       //geolocation (you are here marker)
       var locationOptions = {
         enableHighAccuracy: true,
@@ -171,6 +171,22 @@
       };
       var locationMarker;
       var coords;
+
+      //listening for changes
+      const searchInput = document.getElementById('searchInput');
+
+      const inputHandler = function(e) {
+        console.log(e.target.value);
+
+        var compared = e.target.value.toLowerCase();
+
+        loadAPList(allAccessPoints.filter(
+          ap => ap.SSID.toLowerCase().includes(compared) || ap.password.toLowerCase().includes(compared) || ap.MAC.toLowerCase().includes(compared)
+        ), false);
+      }
+
+      //TODO: fix the performance of this
+      //searchInput.addEventListener('input', inputHandler);
 
       function onInitialLocationSuccess(pos) {
         coords = pos.coords
@@ -213,6 +229,64 @@
         if(!mymap.hasLayer(locationMarker)){
           onInitialLocationSuccess(pos);
         }
+      }
+
+      function onFilterPress(){
+        var compared = searchInput.value.toLowerCase();
+
+        loadAPList(allAccessPoints.filter(
+          ap => ap.SSID.toLowerCase().includes(compared) || ap.password.toLowerCase().includes(compared) || ap.MAC.toLowerCase().includes(compared)
+        ), true);
+      }
+
+      function loadAPList(accessPoints, refreshMap){
+        var startTime = Date.now()
+        console.log(`start ${startTime}`)
+
+        //if (markerLayers !== undefined) mymap.removeLayer(markerLayers);
+        $('#networkList').remove();
+        var removedTime = Date.now()
+        console.log(`removed ${removedTime - startTime}`)
+        $('#networkTable').append('<tbody id="networkList"></tbody>');
+
+        var apGroups = {};
+        var tableString = "";
+        accessPoints.forEach((entry) => {
+          if(refreshMap) {
+            var marker = L.circleMarker([entry.position[0], entry.position[1]]);
+            marker.bindPopup(`<b>SSID:</b> ${entry.SSID}<br><b>BSSID:</b> ${entry.MAC}<br><b>Password:</b> ${entry.password}</b><br><b>Added on:</b> ${entry.timestamp}<br><b>Found by:</b> ${entry.author}<br><a href="https://wigle.net/search?netid=${entry.MAC}">More info...</a>`)//.openPopup();
+            marker.setStyle({color: `#${entry.marker_color}`});
+            if(typeof apGroups[entry.author] === 'undefined')
+              apGroups[entry.author] = [];
+            apGroups[entry.author].push(marker);
+          }
+
+          tableString += `<tr><td><b>${entry.SSID}</b> (${entry.MAC})<br>${entry.password}</td></tr>`;
+        });
+
+        $('#networkList').append(tableString);
+
+        var midTime = Date.now()
+        console.log(`array built ${midTime - startTime}`)
+
+        //exit the function if we're not refreshing the map
+        if(!refreshMap) return;
+        //adding the access point cluster onto the map
+        for (const markerLayer in markerLayers) {
+          if(layerControl !== undefined) layerControl.removeLayer(markerLayers[markerLayer]);
+          mymap.removeLayer(markerLayers[markerLayer]);
+        }
+
+        //var overlays = {};
+        for (const apGroup in apGroups) {
+          var mySubGroup = L.featureGroup.subGroup(cluster, apGroups[apGroup]);
+          layerControl.addOverlay(mySubGroup, apGroup)
+          //overlays[apGroup] = mySubGroup;
+          markerLayers.push(mySubGroup);
+          mymap.addLayer(mySubGroup);
+        }
+
+        console.log(`${Date.now() - midTime} (${Date.now() - startTime})`)
       }
    </script>
 </div>
