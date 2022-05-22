@@ -94,7 +94,7 @@
                   <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="searchInput">
                 </div>
                 <div class="col-auto">
-                  <button type="button" class="btn btn-primary" onclick="onFilterPress()">Filter</button>
+                  <button type="button" class="btn btn-primary" id="filterButton" onclick="onFilterPress()">Filter</button>
                 </div>
             </tr>
           </thead>
@@ -175,7 +175,7 @@
       //listening for changes
       const searchInput = document.getElementById('searchInput');
 
-      const inputHandler = function(e) {
+      searchInput.addEventListener('input', function(e) {
         console.log(e.target.value);
 
         var compared = e.target.value.toLowerCase();
@@ -183,10 +183,14 @@
         loadAPList(allAccessPoints.filter(
           ap => ap.SSID.toLowerCase().includes(compared) || ap.password.toLowerCase().includes(compared) || ap.MAC.toLowerCase().includes(compared)
         ), false);
-      }
+      });
 
-      //TODO: fix the performance of this
-      searchInput.addEventListener('input', inputHandler);
+      searchInput.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+          event.preventDefault();
+          document.getElementById("filterButton").click();
+        }
+      }); 
 
       function onInitialLocationSuccess(pos) {
         coords = pos.coords
