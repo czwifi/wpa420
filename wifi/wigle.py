@@ -1,5 +1,6 @@
 from wifi.models import AccessPoint
 
+from django.utils import timezone
 from datetime import datetime, timedelta
 from requests.auth import HTTPBasicAuth
 import requests
@@ -20,7 +21,7 @@ def get_wigle_limit():
 
 def check_too_many_aps():
     wigle_limit = get_wigle_limit()
-    ap_count = AccessPoint.objects.filter(location_refreshed__gte= datetime.now() - timedelta(hours = 24)).count()
+    ap_count = AccessPoint.objects.filter(location_refreshed__gte= timezone.now() - timedelta(hours = 24)).count()
     if ap_count > wigle_limit:
         raise TooManyLocalRequests
 
@@ -34,7 +35,7 @@ def refresh_ap(ap, wigle_name, wigle_key, bypass_limit=False):
     wigle_info = json.loads(wigle_info.text)
     if wigle_info['success'] is False and wigle_info['message'] == 'too many queries today.':
         raise TooManyQueriesToday
-    ap.location_refreshed = datetime.now()
+    ap.location_refreshed = timezone.now()
     ap.refresh_attempts += 1
     if wigle_info['success'] is True:
         ap_info = wigle_info['results'][0]

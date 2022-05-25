@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext as _
+from django.utils import timezone
 
 from datetime import datetime
 
@@ -23,8 +24,8 @@ class WifiUserApiKey(models.Model):
 		db_index=True,
 	)
 	description = models.CharField(max_length=255)
-	created = models.DateTimeField('date created', default=datetime.now)
-	used = models.DateTimeField('date used', default=datetime.now)
+	created = models.DateTimeField('date created', default=timezone.now)
+	used = models.DateTimeField('date used', default=timezone.now)
 	def __str__(self):
 		return f"{self.wifi_user} : {self.description}"
 
@@ -43,7 +44,7 @@ class WifiUserInvite(models.Model):
 		db_index=True,
 		related_name='invited_by',
 	)
-	generated = models.DateTimeField('date generated', default=datetime.now)
+	generated = models.DateTimeField('date generated', default=timezone.now)
 	def __str__(self):
 		return f"{self.author} : {self.invitee}"
 
@@ -67,7 +68,7 @@ class WifiImport(models.Model):
 		#default=Frequency.FREQ_2_4G,
 	)
 
-	added = models.DateTimeField('date added', default=datetime.now)
+	added = models.DateTimeField('date added', default=timezone.now)
 	delete_unlocateable = models.BooleanField(default=False)
 
 	def __str__(self):
@@ -115,7 +116,7 @@ class AccessPoint(models.Model):
 		on_delete=models.CASCADE,
 		db_index=True,
 	)
-	added = models.DateTimeField('date added', default=datetime.now)
+	added = models.DateTimeField('date added', default=timezone.now)
 
 	#Wigle Data
 	wigle_ssid = models.CharField(max_length=32, db_index=True, blank=True, null=True)
