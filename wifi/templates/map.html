@@ -257,9 +257,10 @@
         var tableString = "";
         var tableCount = 0;
         //if(!refreshMap) accessPoints = accessPoints.slice(0, 100);
-        $('#networkCount').html(accessPoints.length)
+        $('#networkCount').html(accessPoints.length);
 
         accessPoints.forEach((entry) => {
+          var dateObject = new Date(entry.timestamp);
           if(refreshMap && entry.position[0] != "null") {
             var marker = L.circleMarker([entry.position[0], entry.position[1]]);
             marker.bindPopup(`<b>SSID:</b> ${entry.SSID}<br><b>BSSID:</b> ${entry.MAC}<br><b>Password:</b> ${entry.password}</b><br><b>Added on:</b> ${entry.timestamp}<br><b>Found by:</b> ${entry.author}<br><a href="https://wigle.net/search?netid=${entry.MAC}">More info...</a>`)//.openPopup();
@@ -269,7 +270,8 @@
             apGroups[entry.author].push(marker);
           }
 
-          if(tableCount < 100) tableString += `<tr><td><b>${entry.SSID}</b> (${entry.MAC})<br>${entry.password}</td></tr>`;
+          //coincidentally lithuania happens to use yyyy-mm-dd so we'll just force that
+          if(tableCount < 100) tableString += `<tr><td><b>${entry.SSID}</b> <small>(${entry.MAC}, ${dateObject.toLocaleDateString('lt-LT')})</small><br>${entry.password}</td></tr>`;
           tableCount++;
         });
 
